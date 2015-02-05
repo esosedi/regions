@@ -7,6 +7,7 @@
     <script type="text/javascript"
             src="http://api-maps.yandex.ru/2.1/?lang=ru-RU&mode=debug"></script>
     <script type="text/javascript" src="regions.js"></script>
+    <script type="text/javascript" src="http://yandex.st/jquery/1.8.2/jquery.min.js"></script>
 </head>
 
 <style>
@@ -110,9 +111,9 @@
                 var meta = data.metaData,
                         minLevel = meta.levels[0],
                         maxLevel = meta.levels[1] + 1;
-                collection.setStyles(function (object) {
-                    var level = object.properties.get('level');
-                    object.properties.set('balloonContent', "<div style=''>" + JSON.stringify(object.properties.getAll()).split(',').join(", ") + "</div>");
+                collection.setStyles(function (object, yobject) {
+                    var level = object.properties.level;
+                    yobject.properties.set('balloonContent', "<div style=''>" + JSON.stringify(object.properties).split(',').join(", ") + "</div>");
                     return ({
                         zIndex: level,
                         zIndexHover: level,
@@ -145,7 +146,6 @@
         load('world');
         window.rload = load;
 
-        var colorSet = ['#000', '#222', '#444'];
     });
 </script>
 </html>

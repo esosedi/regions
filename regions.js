@@ -280,7 +280,7 @@ var osmeRegions = (function () {
                 },
                 setStyles: function (fn) {
                     collection.each(function (object) {
-                        object.options.set(styleToYandex(fn(idTable[object.properties.get('osmId')])));
+                        object.options.set(styleToYandex(fn(idTable[object.properties.get('osmId')], object)));
                     });
                 },
                 addEvent: function (event, callback) {
@@ -312,7 +312,7 @@ var osmeRegions = (function () {
                 },
                 setStyles: function (fn) {
                     collection.setStyle(function (object) {
-                        return styleToGoogle(fn(idTable[object.getProperty('osmId')]));
+                        return styleToGoogle(fn(idTable[object.getProperty('osmId')], object));
                     });
                 },
                 addEvent: function (event, callback) {
