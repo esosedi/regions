@@ -202,7 +202,15 @@ var osmeRegions = (function () {
     var HOST = 'http://data.esosedi.org/regions/v1/';
     var cache = {};
 
+    /**
+     * @name osmeRegions
+     * @class
+     */
     return {
+        /**
+         * setup default data host
+         * @param host
+         */
         setHost: function (host) {
             HOST = host;
         },
@@ -210,6 +218,13 @@ var osmeRegions = (function () {
         coordinateDecode: decodeLineBlock,
         geometryCombine: getGeometry,
 
+        /**
+         * Loads GeoJSON from default host
+         * @param {String} region OSMRelationId,ISO3166-2 code or world's region name(Asia, Europe etc)
+         * @param {Object} options
+         * @param {String} [options.lang='ru'] Language
+         * @param {function) callback
+         */
         geoJSON: function (region, options, callback) {
             var lang = options.lang || 'en',
                 addr = lang + '_' + region;
@@ -224,8 +239,17 @@ var osmeRegions = (function () {
             }
         },
 
+        /**
+         * transport function. Can be overloader
+         * @function
+         */
         loadData: load,
 
+        /**
+         * parse default data format
+         * @param {Strings} data
+         * @returns {geoJSON}
+         */
         parseData: function (data) {
             return {
                 type: "FeatureCollection",
@@ -234,14 +258,27 @@ var osmeRegions = (function () {
             };
         },
 
+        /**
+         * drop internal cache
+         */
         dropCache: function () {
             cache = {};
         },
 
-        _setCoordOrder: function (order) {
+        /**
+         * sets coord order
+         * @param order latlong or longlat
+         */
+        setCoordOrder: function (order) {
             latLongOrder = (order == 'latlong');
         },
 
+        /**
+         * Convert geoJSON to yandex wrapper
+         * @param geoJson
+         * @param [ym21] yandex maps namespace
+         * @returns {{add: Function, remove: Function, setStyles: Function, addEvent: Function, removeEvent: Function}}
+         */
         toYandex: function (geoJson, ym21) {
 
             ym21 = ym21 || ymaps;
@@ -295,6 +332,12 @@ var osmeRegions = (function () {
             };
         },
 
+        /**
+         * Convert geoJSON to google wrapper
+         * @param geoJson
+         * @param maps[=google.map]
+         * @returns {{add: Function, remove: Function, setStyles: Function, addEvent: Function, removeEvent: Function}}
+         */
         toGoogle: function (geoJson, maps) {
             // use google.data
 
@@ -326,7 +369,7 @@ var osmeRegions = (function () {
                 }
             };
         }
-    }
+    };
 
     function buildIdTable (geoJson) {
         var ret = {},
