@@ -1,9 +1,31 @@
+/*!
+ * OSMeRegions JavaScript Library
+ * http://data.esosedi.org/regions/
+ * https://github.com/esosedi/regions
+ *
+ * @author Anton Korzunov <kashey@yandex-team.ru>
+ * Released under the MIT license
+ */
+
 var osmeRegions = (function () {
+
+    /**
+     * wrapper for map data
+     * @name osmeMapCollection
+     * @class
+     */
+
+    /**
+     * Wraper for filtering regions
+     * @name RegionObject
+     * @class
+     */
+
 
     var latLongOrder = 0,
         codingCoefficient = 1 / 1000000,
         fraction = 2,
-        dividor = 1 / 0xFFFF;//0xFF x fraction
+        dividor = 1 / 0xFFFF; // target resolution 65k, real 4k
 
     function flipa (a) {
         var b = [];
@@ -22,7 +44,7 @@ var osmeRegions = (function () {
     }
 
     /**
-     * coordinateDcode
+     * coordinateDecode
      * partof Yandex.Maps.API
      */
     function decodeByteVector (x, N) {
@@ -78,7 +100,7 @@ var osmeRegions = (function () {
         var coordinates = [],
             fixedPoints = [],
             meta = [],
-            paths = osmeData.paths[regionId],
+            paths = regionId.length ? regionId : osmeData.paths[regionId],
             segments = [],
             osmeWays = osmeData.ways;
 
@@ -121,17 +143,19 @@ var osmeRegions = (function () {
             type: 'Polygon',
             fillRule: 'nonZero',
             coordinates: coordinates,
+            path: paths,
             //segments: segments,
-            //fixedPoints: fixedPoints,
+            fixedPoints: fixedPoints,
             //ways: meta
         };
     };
 
     /**
-     * Загружает файл данных
-     * @param {Function} callback Функция обработчик.
+     * jQuery Ajax data transfer
+     * @param {Function} callback
+     * @param {Function) errorCallback
      */
-    function load (path, callback) {
+    function jq_load (path, callback, errorCallback) {
         jQuery.ajax({
             type: 'GET',
             url: path,
@@ -146,36 +170,94 @@ var osmeRegions = (function () {
 
             error: function (error) {
                 window.console && console.error('osmeRegions error:', error);
+                errorCallback(error);
             }
         });
     }
 
-    function setupGeometry (regionsData) {
+    /**
+     * Vanilla Ajax data transfer
+     * @param {Function} callback
+     * @param {Function) errorCallback
+     */
+    function load (path, callback, errorCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", path, true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200 || xhr.status === 304) {
+                    var response = false;
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        callback(response);
+                    } catch (e) {
+                        errorCallback(e);
+                    }
+                } else {
+                    window.console && console.error("Response recieved with status " + xhr.status);
+                    errorCallback(xhr);
+                }
+            }
+        };
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.send();
+    };
+
+    /**
+     * main decode function
+     * @param regionsData
+     * @param options
+     * @returns {Array}
+     */
+    function setupGeometry (regionsData, options) {
+        options = options || {};
         var regions = regionsData.regions,
-            dataset = [];
+            dataset = [],
+            postFilter = options.postFilter || regionsData.meta.postFilter ? new Function('region', regionsData.meta.postFilter) : 0,
+            disputedBorders = regionsData.meta.disputedBorders || {},
+            useSetup = options.recombine || options.lang || 'en',
+            disputedBorder = typeof useSetup == 'string' ? disputedBorders[useSetup] : useSetup,
+            geometry = 0;
+
+        for (var i in disputedBorders) {
+            var setup = disputedBorders[i];
+            for (var j in setup) {
+                var regionSet = setup[j];
+                if (typeof regionSet == 'string') {
+                    setup[j] = new Function('region', regionSet);
+                }
+            }
+        }
 
         for (var i in regions) {
             if (regions.hasOwnProperty(i)) {
-                var geometry = getGeometry(i, regionsData);
-                if (dataset[regions[i].index]) {
-                    debugger;
-                }
-                dataset[regions[i].index] = {
-                    type: "Feature",
-                    geometry: geometry,
-                    properties: {
-                        osmId: i,
-                        level: regions[i].level,
-                        properties: regions[i].property,
-                        parents: regions[i].parents,
-                        hintContent: regions[i].name,
-                        name: regions[i].name,
-                        title: regions[i].name,
-                        wikipedia: regions[i].wikipedia,
-                        orderIndex: regions[i].index,
-                        square: regions[i].square
+                if (!postFilter || postFilter(wrapRegion(i, regionsData))) {
+                    if (!disputedBorder || !disputedBorder[+i]) {
+                        geometry = getGeometry(+i, regionsData);
+                    } else {
+                        geometry = recombineRegion(regionsData, {
+                            filter: disputedBorder[+i]
+                        });
                     }
-                };
+
+                    dataset[regions[i].index] = {
+                        type: "Feature",
+                        geometry: geometry,
+                        properties: {
+                            osmId: i,
+                            level: regions[i].level,
+                            properties: regions[i].property,
+                            parents: regions[i].parents,
+                            hintContent: regions[i].name,
+                            name: regions[i].name,
+                            title: regions[i].name,
+                            wikipedia: regions[i].wikipedia,
+                            orderIndex: regions[i].index,
+                            square: regions[i].square
+                        }
+                    };
+                }
             }
         }
         var result = [];
@@ -199,16 +281,307 @@ var osmeRegions = (function () {
         };
     }
 
-    var HOST = 'http://data.esosedi.org/regions/v1/';
-    var cache = {};
+    /**
+     * wraps region for filter functions
+     * @param rid
+     * @param data
+     * @returns {RegionObject}
+     */
+    function wrapRegion (rid, data) {
+        var meta = data.regions[rid];
+        return {
+            osmId: rid,
+            geoNamesId: meta.property.geoNamesId,
+            iso: meta.property.iso3166,
+
+            getBorderWith: function (id) {
+                var wset = {}, i, l1, j, l2,
+                    path1 = data.paths[id],
+                    path2 = data.paths[rid];
+                for (i = 0, l1 = path1.length; i < l1; ++i) {
+                    for (j = 0, l2 = path1[i].length; j < l2; ++j) {
+                        wset[Math.abs(path1[i][j])] = 1;
+                    }
+                }
+                var result = [];
+                for (i = 0, l1 = path2.length; i < l1; ++i) {
+                    var line = [];
+                    for (j = 0, l2 = path2[i].length; j < l2; ++j) {
+                        if (wset[Math.abs(path2[i][j])]) {
+                            //line.push(path2[i][j]);
+                            // path is full in
+                            result.push(path2[i]);
+                        }
+                    }
+                    //if (line.length) {
+                    //    result.push(line);
+                    //}
+                }
+                return result;
+            },
+
+            hasBorderWith: function (id) {
+
+                var wset = {}, i, l1, j, l2,
+                    path1 = data.paths[rid],
+                    path2 = data.paths[id];
+                for (i = 0, l1 = path1.length; i < l1; ++i) {
+                    for (j = 0, l2 = path1[i].length; j < l2; ++j) {
+                        wset[Math.abs(path1[i][j])] = 1;
+                    }
+                }
+                for (i = 0, l1 = path2.length; i < l1; ++i) {
+                    for (j = 0, l2 = path2[i].length; j < l2; ++j) {
+                        if (wset[Math.abs(path2[i][j])]) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+
+            hasParent: function (id) {
+                var parents = meta.parents;
+                for (var i = 0, l = parents.length; i < l; ++i) {
+                    if (parents[i].id == id) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    };
 
     /**
-     * @name osmeRegions
-     * @class
+     * recombination
+     * @param regionsData
+     * @param query
+     * @returns {*}
      */
+    function recombineRegion (regionsData, query) {
+        var regions = regionsData.regions,
+            inpaths = regionsData.paths,
+            passRegions = {},
+            paths = [];
+
+        function filterPath (path) {
+            var result = [];
+            for (var i = 0, l = path.length; i < l; ++i) {
+                if (path[i].length > 1) {
+                    result.push([path[i]]);
+                }
+            }
+            return result;
+        }
+
+        //fill regions and way counter
+        for (var ri in regions) {
+            if (regions.hasOwnProperty(ri)) {
+                var tpaths = inpaths[ri];
+                var qf = query.filter(wrapRegion(ri, regionsData));
+                if (qf) {
+                    if (qf !== true) {
+                        if (qf.path) {
+                            tpaths = qf.path;
+                        }
+                    }
+                    if (tpaths && tpaths.length) {
+                        tpaths = filterPath(tpaths);
+                        if (tpaths.length) {
+                            passRegions[ri] = ri;
+                            paths.push.apply(paths, tpaths);
+                        }
+                    }
+                }
+            }
+        }
+
+        function joinPaths (patha, pathb) {
+
+            var usedWays = {},
+                wayDirection = {},
+                wayLookup = {};
+
+            var apaths = [patha, pathb]
+            for (var ri = 0; ri < 2; ++ri) {
+                var tpaths = apaths[ri];
+                for (var pathId = 0, pathLength = tpaths.length; pathId < pathLength; ++pathId) {
+                    var path = tpaths[pathId];
+                    if (typeof path == 'number') {
+                        path = [path];
+                    }
+                    for (var i = 0, l = path.length; i < l; ++i) {
+                        var wayId = Math.abs(path[i]);
+                        usedWays[wayId] = (usedWays[wayId] || 0) + 1;
+                    }
+                }
+            }
+
+
+            var pass = 0, lost = 0;
+            for (var ri = 0; ri < 2; ++ri) {
+                var tpaths = apaths[ri];
+                for (var pathId = 0, pathLength = tpaths.length; pathId < pathLength; ++pathId) {
+                    var path = tpaths[pathId];
+                    if (typeof path == 'number') {
+                        path = [path];
+                    }
+
+                    for (var i = 0, l = path.length; i < l; ++i) {
+                        var wayId = Math.abs(path[i]);
+                        if (usedWays[wayId] === 1) {
+                            pass++;
+                            var lw = +path[(i - 1 + l) % l],
+                                rw = +path[(i + 1 + l) % l];
+                            wayLookup[lw] = wayLookup[lw] || [];
+                            //wayLookup[rw] = wayLookup[rw] || [];
+                            wayLookup[lw].push(path[i]);
+                            // wayLookup[rw].push(path[i]);
+                            wayDirection[path[i]] = [
+                                +lw,
+                                +path[i],
+                                +rw,
+                                ri,
+                                pathId
+                            ];
+                        } else {
+                            lost++;
+                        }
+                    }
+                }
+            }
+            if (!lost) {
+                return false;
+            }
+
+            function getWay () {
+                for (var i in wayDirection) {
+                    if (testWay(i)) {
+                        return +i;
+                    }
+                }
+                return false;
+            }
+
+            function testWay (i) {
+                return i && wayDirection.hasOwnProperty(i) && wayDirection[i][1];
+            }
+
+            function reverse () {
+                rpath.reverse();
+                for (var i = 0, l = rpath.length; i < l; ++i) {
+                    rpath[i] *= -1;
+                }
+                ord *= -1;
+                return rpath;
+            }
+
+            var rpaths = [], way = 0, rpath = [], ord = 1;
+
+            function tryJoinWay (rpath, way) {
+                if (!wayDirection[way]) {
+                    return false;
+                }
+                var lw = ord == -1 ? wayDirection[way][0] : 0,
+                    rw = ord == +1 ? wayDirection[way][2] : 0;
+                if (testWay(rw)) {
+                    way = rw;
+                    rpath.push(+way * ord);
+                } else if (testWay(lw)) {
+                    way = lw;
+                    rpath.push(+way);
+                } else {
+                    // indirect
+                    var lw = 0,
+                        rwset = wayLookup[-wayDirection[way][2]];
+                    way = 0;
+                    for (var j in rwset) {
+                        rw = rwset[j];
+                        if (testWay(rw)) {
+                            way = rw;
+                            rpath.push(+way);
+                            break;
+                        }
+                    }
+                    if (!way) {
+                        return false;
+                    }
+                }
+                return way;
+            }
+
+
+            while (false !== (way = getWay())) {
+                rpath = [];
+                ord = 1;
+                rpath.push(+way);
+                while (way) {
+                    wayDirection[way][1] = 0;
+                    var newWay = tryJoinWay(rpath, way);
+                    if (!newWay) {
+                        break;
+                    }
+                    way = newWay;
+                }
+                rpaths.push(rpath);
+            }
+            return rpaths;
+        }
+
+        paths.sort(function (a, b) {
+            return Math.abs(a[0][0]) < Math.abs(b[0][0]);
+        });
+
+        var rpath = paths[0],
+            skip = {0: 1},
+            skipCnt = 1,
+            rpaths = [],
+            l = paths.length,
+            freePass = 0, joinPass = 0,
+            ccx = 0;
+
+        while (skipCnt < l) {
+            joinPass = 0;
+            for (var i = 1, l = paths.length; i < l; ++i) {
+                var rid = i % l;
+                if (!(rid in skip)) {
+                    var result = joinPaths(rpath, paths[rid]);
+                    if (result && result.length == 1) {
+                        rpath = result;
+                        skip[rid] = 1;
+                        skipCnt++;
+                        joinPass++;
+                    } else {
+                        freePass = rid;
+                    }
+                }
+            }
+            if (!joinPass) {
+                if (freePass) {
+                    rpath.push.apply(rpath, paths[freePass]);
+                    skip[freePass] = 1;
+                    skipCnt++;
+                } else {
+                    break;
+                }
+            }
+            if (ccx++ > 1000) {
+                break;
+            }
+
+        }
+
+        //rpath=
+
+        return getGeometry(rpath, regionsData);
+    }
+
+    var HOST = 'http://esosedi.ru/_dataExport/regions/v1/';
+    var cache = {};
+
     return {
         /**
-         * setup default data host
+         * override data host
          * @param host
          */
         setHost: function (host) {
@@ -217,67 +590,93 @@ var osmeRegions = (function () {
 
         coordinateDecode: decodeLineBlock,
         geometryCombine: getGeometry,
+        flipCoordinate: flip,
+
+        /**
+         * allow recombination
+         * @param regionsData
+         * @param {Object} query
+         * @param {Function} query.filter
+         * @function
+         */
+        recombine: recombineRegion,
 
         /**
          * Loads GeoJSON from default host
-         * @param {String} region OSMRelationId,ISO3166-2 code or world's region name(Asia, Europe etc)
+         * @param {String} region OSMRelationId,ISO3166-2 code or world's region name(Asia, Europe etc) or absolute URL.
          * @param {Object} options
-         * @param {String} [options.lang='ru'] Language
+         * @param {String} [options.lang='en'] Language (en,de,ru).
+         * @param {Number} [options.quality=1] Quality. 0 for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
+         * @param {String} [options.type=''] Type of data. Can be empty or 'coast' (unstable mode).
+         * @param {Boolean} [options.noache] Turns off internal cache.
+         * @param {Function} [options.postFilter] filtering function
+         * @param {String|Object} [options.recombine] recombination function
          * @param {function) callback
+         * @param {function) [errorCallback]
          */
-        geoJSON: function (region, options, callback) {
+        geoJSON: function (region, options, callback, errorCallback) {
+            if (!errorCallback) {
+                errorCallback = function () {
+                };
+            }
             var lang = options.lang || 'en',
                 addr = lang + '_' + region;
-            if (!cache[addr]) {
+            if (!cache[addr] || options.nocache) {
                 var _this = this;
-                this.loadData(HOST + '?lang=' + addr, function (data) {
-                    cache[addr] = _this.parseData(data);
-                    callback(cache[addr]);
-                })
+                if ((region + "").indexOf('http') === 0) {
+                    addr = region;
+                } else {
+                    addr = HOST + '?lang=' + addr;
+                    if (options.quality) {
+                        addr += '&q=' + (options.quality + 1);
+                    }
+                    if (options.type) {
+                        addr += '&type=' + options.type;
+                    }
+                }
+                this.loadData(addr, function (data) {
+                    cache[addr] = data;
+                    callback(_this.parseData(data, options), data);
+                }, errorCallback)
             } else {
-                callback(cache[addr]);
+                callback(this.parseData(cache[addr], options), data);
             }
         },
 
         /**
-         * transport function. Can be overloader
-         * @function
+         * overloadable data transfer function
          */
-        loadData: load,
+        loadData: load, //or jq_load
 
         /**
          * parse default data format
          * @param {Strings} data
          * @returns {geoJSON}
          */
-        parseData: function (data) {
+        parseData: function (data, options) {
             return {
                 type: "FeatureCollection",
-                features: setupGeometry(data),
+                features: setupGeometry(data, options),
                 metaData: data.meta
             };
         },
 
         /**
-         * drop internal cache
+         * drops internal cache
          */
         dropCache: function () {
             cache = {};
         },
 
-        /**
-         * sets coord order
-         * @param order latlong or longlat
-         */
-        setCoordOrder: function (order) {
+        _setCoordOrder: function (order) {
             latLongOrder = (order == 'latlong');
         },
 
         /**
-         * Convert geoJSON to yandex wrapper
+         * convert geoJSON to YMAPS collection
          * @param geoJson
-         * @param [ym21] yandex maps namespace
-         * @returns {{add: Function, remove: Function, setStyles: Function, addEvent: Function, removeEvent: Function}}
+         * @param [ym21]
+         * @returns {osmeMapCollection}
          */
         toYandex: function (geoJson, ym21) {
 
@@ -288,12 +687,14 @@ var osmeRegions = (function () {
 
             for (var i = 0, l = dataset.length; i < l; ++i) {
                 var line = dataset[i];
-                if (1) {
+                if (line.geometry) {
                     collection.add(new ym21.GeoObject(
                             latLongOrder ? line : convertCoordinate(line), {
                                 simplificationFixedPoints: line.geometry.fixedPoints
                             })
                     );
+                } else {
+                    window.console && console.log('osme line fail', line);
                 }
 
                 if (0) {
@@ -333,10 +734,10 @@ var osmeRegions = (function () {
         },
 
         /**
-         * Convert geoJSON to google wrapper
+         * converts GeoJSON to Google.data object
          * @param geoJson
-         * @param maps[=google.map]
-         * @returns {{add: Function, remove: Function, setStyles: Function, addEvent: Function, removeEvent: Function}}
+         * @param maps
+         * @returns {osmeMapCollection}
          */
         toGoogle: function (geoJson, maps) {
             // use google.data
@@ -370,6 +771,7 @@ var osmeRegions = (function () {
             };
         }
     };
+
 
     function buildIdTable (geoJson) {
         var ret = {},
