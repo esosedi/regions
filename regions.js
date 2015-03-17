@@ -214,7 +214,8 @@ var osmeRegions = (function () {
         options = options || {};
         var regions = regionsData.regions,
             dataset = [],
-            postFilter = options.postFilter || regionsData.meta.postFilter ? new Function('region', regionsData.meta.postFilter) : 0,
+            postFilter = options.postFilter || regionsData.meta && regionsData.meta.postFilter ? new Function('region', regionsData.meta.postFilter) : 0,
+            scheme = options.scheme || regionsData.meta.scheme,
             disputedBorders = regionsData.meta.disputedBorders || {},
             useSetup = options.recombine || options.lang || 'en',
             disputedBorder = typeof useSetup == 'string' ? disputedBorders[useSetup] : useSetup,
@@ -233,12 +234,17 @@ var osmeRegions = (function () {
         for (var i in regions) {
             if (regions.hasOwnProperty(i)) {
                 if (!postFilter || postFilter(wrapRegion(i, regionsData))) {
-                    if (!disputedBorder || !disputedBorder[+i]) {
-                        geometry = getGeometry(+i, regionsData);
-                    } else {
+                    if (disputedBorder && disputedBorder[+i]) {
                         geometry = recombineRegion(regionsData, {
                             filter: disputedBorder[+i]
                         });
+                    } else if (scheme && scheme[+i]) {
+                        var sch = scheme[+i];
+                        geometry = recombineRegion(regionsData, {
+                            filter: typeof sch == 'string' ? new Function('region', sch) : sch
+                        });
+                    } else {
+                        geometry = getGeometry(+i, regionsData);
                     }
 
                     dataset[regions[i].index] = {
@@ -274,7 +280,7 @@ var osmeRegions = (function () {
             type: "Feature",
             geometry: {
                 type: 'Polygon',
-                fillRule: 'nonZero',
+                fillRule: feature.geometry.coordinates.length > 1 ? 'evenOdd' : 'nonZero',
                 coordinates: flip(feature.geometry.coordinates)
             },
             properties: feature.properties
@@ -325,6 +331,9 @@ var osmeRegions = (function () {
                 var wset = {}, i, l1, j, l2,
                     path1 = data.paths[rid],
                     path2 = data.paths[id];
+                if (!path1 || !path2) {
+                    return false;
+                }
                 for (i = 0, l1 = path1.length; i < l1; ++i) {
                     for (j = 0, l2 = path1[i].length; j < l2; ++j) {
                         wset[Math.abs(path1[i][j])] = 1;
@@ -367,7 +376,7 @@ var osmeRegions = (function () {
         function filterPath (path) {
             var result = [];
             for (var i = 0, l = path.length; i < l; ++i) {
-                if (path[i].length > 1) {
+                if (1 || path[i].length > 1) {
                     result.push([path[i]]);
                 }
             }
@@ -558,7 +567,9 @@ var osmeRegions = (function () {
             }
             if (!joinPass) {
                 if (freePass) {
-                    rpath.push.apply(rpath, paths[freePass]);
+                    rpaths.push(rpath[0]);
+                    rpath = paths[freePass];
+                    //rpath.push.apply(rpath, paths[freePass]);
                     skip[freePass] = 1;
                     skipCnt++;
                 } else {
@@ -571,9 +582,8 @@ var osmeRegions = (function () {
 
         }
 
-        //rpath=
-
-        return getGeometry(rpath, regionsData);
+        rpaths.push(rpath[0]);
+        return getGeometry(rpaths, regionsData);
     }
 
     var HOST = 'http://esosedi.ru/_dataExport/regions/v1/';
@@ -611,6 +621,7 @@ var osmeRegions = (function () {
          * @param {Boolean} [options.noache] Turns off internal cache.
          * @param {Function} [options.postFilter] filtering function
          * @param {String|Object} [options.recombine] recombination function
+         * @param {Object} [options.scheme] another recombination function
          * @param {function) callback
          * @param {function) [errorCallback]
          */
@@ -621,25 +632,26 @@ var osmeRegions = (function () {
             }
             var lang = options.lang || 'en',
                 addr = lang + '_' + region;
+
+            if ((region + "").indexOf('http') === 0) {
+                addr = region;
+            } else {
+                addr = HOST + '?lang=' + addr;
+                if (options.quality) {
+                    addr += '&q=' + (options.quality + 1);
+                }
+                if (options.type) {
+                    addr += '&type=' + options.type;
+                }
+            }
             if (!cache[addr] || options.nocache) {
                 var _this = this;
-                if ((region + "").indexOf('http') === 0) {
-                    addr = region;
-                } else {
-                    addr = HOST + '?lang=' + addr;
-                    if (options.quality) {
-                        addr += '&q=' + (options.quality + 1);
-                    }
-                    if (options.type) {
-                        addr += '&type=' + options.type;
-                    }
-                }
                 this.loadData(addr, function (data) {
                     cache[addr] = data;
                     callback(_this.parseData(data, options), data);
                 }, errorCallback)
             } else {
-                callback(this.parseData(cache[addr], options), data);
+                callback(this.parseData(cache[addr], options), cache[addr]);
             }
         },
 

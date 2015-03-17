@@ -90,40 +90,43 @@ For example - this code included in world json file, and executed automatically
 }
 ```
 What this function do
- - for #60199 - select all object in 60199, but not Crimea and Kiev(internal shape)
- - for #60189 - selects RU plus Crimea regions
- - later - remove all regions of UA (exists in geoJSON file for this recombination)
+ - for #60199 - select all objects in 60199, but not Crimea and Kiev(internal shape)
+ - for #60189 - selects RU, plus Crimea regions.
+ - later - remove all regions of UA (exists in geoJSON file for this recombination) cos we require countries.
+
 You can set options.recombine to string ('ru' in this example) to select scheme, or set new scheme object. By default recombine==lang
+By the same way you can join SJ to NO or GF to FR. Join US to CA and MX or create EuroUnion.
+The goal is that result is `borderless`.
 
 Recombination can be used to join any set of regions in one. This is usefull in many cases.
 
 ```
- osmeRegions.geoJSON(addr, {lang: 'ru',quality:Q,type:T}, function (data, pureData) {
-                if (1) {
-                    var coords=osmeRegions.recombine(pureData, {
-                        filter: function (region) {
-                            // somethere in Province of Barcelona (349035) and Barcelona(2417889) or adjacent
-                            return region.hasParent(349035) && (region.hasBorderWith(2417889) || region.osmId == 2417889);
-                        }
-                    });
-                    for(var j in coords.coordinates) {
-                        var region = new ymaps.GeoObject({
-                            geometry: {
-                                type: 'Polygon',
-                                fillRule: 'nonZero',
-                                coordinates: osmeRegions.flipCoordinate([coords.coordinates[j]])
-                            }
-                        }, {
-                            opacity: 0.8,
-                            fillColor: 'FEE',
-                            strokeColor: 'F00',
-                            strokeWidth: 2,
-                            pixelRendering: 'static',
-                            draggable: true
-                        });
-                        geoMap.geoObjects.add(region);
-                    }
-                }
+ osmeRegions.geoJSON(addr, {lang: 'en'}, function (data, pureData) {
+    var coords=osmeRegions.recombine(pureData, { // yes, you can use pure data
+        filter: function (region) {
+            // somethere in Province of Barcelona (349035) and Barcelona(2417889) or adjacent
+            // remember - you have to discard #349035 or you got duplicate.
+            return region.hasParent(349035) && (region.hasBorderWith(2417889) || region.osmId == 2417889);
+        }
+    });
+    for(var j in coords.coordinates) {
+        var region = new ymaps.GeoObject({
+            geometry: {
+                type: 'Polygon',
+                fillRule: 'nonZero',
+                coordinates: osmeRegions.flipCoordinate([coords.coordinates[j]])
+            }
+        }, {
+            opacity: 0.8,
+            fillColor: 'FEE',
+            strokeColor: 'F00',
+            strokeWidth: 2,
+            pixelRendering: 'static',
+            draggable: true
+        });
+        geoMap.geoObjects.add(region);
+    }
+}
 ```
 And you got mini Barcelona
 ![BARS](http://kashey.ru/maps/osme/img/r3.png)
@@ -152,5 +155,8 @@ function setColors(collection, countryColors){
         });
     });
 }
-
 ```
+
+Where is also exists options.scheme - yet another recombination function. It also sometimes exists in source geoJSON file.
+The goal still simple - some regions lays on the top of other, and do not have adjacent borders - Kiev, for example, and Kiev province.
+Scheme just adds "hole" to province.
