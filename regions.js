@@ -215,8 +215,8 @@ var osmeRegions = (function () {
         var regions = regionsData.regions,
             dataset = [],
             postFilter = options.postFilter || regionsData.meta && regionsData.meta.postFilter ? new Function('region', regionsData.meta.postFilter) : 0,
-            scheme = options.scheme || regionsData.meta.scheme,
-            disputedBorders = regionsData.meta.disputedBorders || {},
+            scheme = options.scheme || regionsData.meta && regionsData.meta.scheme,
+            disputedBorders = regionsData.meta && regionsData.meta.disputedBorders || {},
             useSetup = options.recombine || options.lang || 'en',
             disputedBorder = typeof useSetup == 'string' ? disputedBorders[useSetup] : useSetup,
             geometry = 0;

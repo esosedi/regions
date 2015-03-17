@@ -1,13 +1,17 @@
 Module for Yandex, Google or other JS Maps for showing countries and regions of the world.
 
 Based on [osme](https://github.com/theKashey/osme) and [Yandex.Maps](http://api.yandex.com/maps/doc/jsapi/).
+Information is from [OpenStreetMap](http://openstreetmap.org), [Wikipedia](http://en.wikipedia.org), [GeoNames](http://geonames.org) and some other sources.
 
-Information from [OpenStreetMap](http://openstreetmap.org), [Wikipedia](http://en.wikipedia.org) and other sources.
 
-
-Created for and used by project [esosedi.org](http://ru.esosedi.org)
+Created for and used by project [esosedi.org](http://ru.esosedi.org).
 
 ![US](http://kashey.ru/maps/osme/img/r2.png)
+
+Data format is quite simple and compact. It is look like [topojson](https://github.com/mbostock/topojson) but more "binary" and contains more data.
+But after all you will get standard geoJSON.
+
+Navigator can be found at [data.esosedi.org](http://data.esosedi.org/)
 
 Usage is simple:
 ```
@@ -131,7 +135,7 @@ Recombination can be used to join any set of regions in one. This is usefull in 
 And you got mini Barcelona
 ![BARS](http://kashey.ru/maps/osme/img/r3.png)
 
-You can do anything (http://jsfiddle.net/9o9ak7fb/1/)
+You can do anything (http://jsfiddle.net/9o9ak7fb/3/)
 
 ```
 var countryColors={
@@ -160,3 +164,8 @@ function setColors(collection, countryColors){
 Where is also exists options.scheme - yet another recombination function. It also sometimes exists in source geoJSON file.
 The goal still simple - some regions lays on the top of other, and do not have adjacent borders - Kiev, for example, and Kiev province.
 Scheme just adds "hole" to province.
+
+
+You dont need to understand all of this - just use.
+
+Cheers, Kashey.
