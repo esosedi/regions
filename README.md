@@ -1,15 +1,17 @@
 Module for Yandex, Google or other JS Maps for showing countries and regions of the world.
 
-Based on [osme](https://github.com/theKashey/osme) and [Yandex.Maps](http://api.yandex.com/maps/doc/jsapi/).
-Information is from [OpenStreetMap](http://openstreetmap.org), [Wikipedia](http://en.wikipedia.org), [GeoNames](http://geonames.org) and some other sources.
+Based on [osme](https://github.com/theKashey/osme) and `regions` or [Yandex.Maps](http://api.yandex.com/maps/doc/jsapi/).
+Information is from [OpenStreetMap](http://openstreetmap.org), [Wikipedia](http://en.wikipedia.org), [GeoNames](http://geonames.org), [eSosedi](http://ru.esosedi.org) and some other sources.
 
 
-Created for and used by project [esosedi.org](http://ru.esosedi.org).
+Created for and used by project [esosedi.org](http://ru.esosedi.org). ! This not just a lib, not just an API - this is service.
+
+!It also may contain, contain and will contain errors, holes and mistakes.!
 
 ![US](http://kashey.ru/maps/osme/img/r2.png)
 
-Data format is quite simple and compact. It is look like [topojson](https://github.com/mbostock/topojson) but more "binary" and contains more data.
-But after all you will get standard geoJSON.
+Data format is quite simple and compact. It is look like [topojson](https://github.com/mbostock/topojson), but more "binary" and contains data like schemes etc.
+After all you will get standard geoJSON. You can use it by your own risk.
 
 Navigator can be found at [data.esosedi.org](http://data.esosedi.org/)
 
