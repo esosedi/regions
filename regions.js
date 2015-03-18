@@ -124,14 +124,14 @@ var osmeRegions = (function () {
                     way = way.slice(0);
                     way.reverse();
                 }
-                //координаты соседних кусочков совпадают
+                // edges have same coordinates
                 if (pathCoordinates.length) {
                     pathCoordinates.length = pathCoordinates.length - 1;
                 }
                 pathCoordinates.push.apply(pathCoordinates, way);
-                //segments.push({way: flipa(way), id: wayId});
                 segmentFixedPoints.push(pathCoordinates.length - 1);
                 ways.push(wayId);
+                //segments.push({way: flipa(way), id: wayId});
             }
             pathCoordinates.push(pathCoordinates[0]);
             coordinates.push(pathCoordinates);
@@ -144,8 +144,8 @@ var osmeRegions = (function () {
             fillRule: 'nonZero',
             coordinates: coordinates,
             path: paths,
-            //segments: segments,
             fixedPoints: fixedPoints,
+            //segments: segments,
             //ways: meta
         };
     };
@@ -616,7 +616,7 @@ var osmeRegions = (function () {
          * @param {String} region OSMRelationId,ISO3166-2 code or world's region name(Asia, Europe etc) or absolute URL.
          * @param {Object} options
          * @param {String} [options.lang='en'] Language (en,de,ru).
-         * @param {Number} [options.quality=1] Quality. 0 for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
+         * @param {Number} [options.quality=0] Quality. 0 for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
          * @param {String} [options.type=''] Type of data. Can be empty or 'coast' (unstable mode).
          * @param {Boolean} [options.noache] Turns off internal cache.
          * @param {Function} [options.postFilter] filtering function
@@ -708,17 +708,6 @@ var osmeRegions = (function () {
                 } else {
                     window.console && console.log('osme line fail', line);
                 }
-
-                if (0) {
-                    for (var j in line.geometry.segments) {
-                        collection.add(new ym21.Polyline(line.geometry.segments[j].way, {
-                            hintContent: 'wid:' + line.geometry.segments[j].id
-                        }, {
-                            strokeWidth: 4,
-                            strokeColor: (i + j) % 2 ? '#F00' : '#0F0'
-                        }));
-                    }
-                }
             }
             return {
                 collection: collection,
@@ -733,10 +722,10 @@ var osmeRegions = (function () {
                         object.options.set(styleToYandex(fn(idTable[object.properties.get('osmId')], object)));
                     });
                 },
-                addEvent: function (event, callback) {
-                    collection.events.add(event, function (event) {
+                addEvent: function (eventName, callback) {
+                    collection.events.add(eventName, function (event) {
                         var target = event.get('target');
-                        callback(idTable[target.properties.get('osmId')], 'yandex', target, event);
+                        callback(idTable[target.properties.get('osmId')], [eventName, 'yandex'], target, event);
                     });
                 },
                 removeEvent: function (event) {
@@ -771,10 +760,10 @@ var osmeRegions = (function () {
                         return styleToGoogle(fn(idTable[object.getProperty('osmId')], object));
                     });
                 },
-                addEvent: function (event, callback) {
-                    collection.addListener(event, function (event) {
+                addEvent: function (eventName, callback) {
+                    collection.addListener(eventName, function (event) {
                         var target = event.feature;
-                        callback(idTable[target.getProperty('osmId')], 'google', target, event);
+                        callback(idTable[target.getProperty('osmId')], [eventName, 'google'], target, event);
                     });
                 },
                 removeEvent: function (event) {
