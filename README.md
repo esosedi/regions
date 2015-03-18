@@ -6,7 +6,7 @@ Information is from [OpenStreetMap](http://openstreetmap.org), [Wikipedia](http:
 
 Created for and used by project [esosedi.org](http://ru.esosedi.org). ! This not just a lib, not just an API - this is service.
 
-!It also may contain, contain and will contain errors, holes and mistakes.!
+!It also may contain, contain and will `contain errors`, holes and mistakes.!
 
 ![US](http://kashey.ru/maps/osme/img/r2.png)
 
