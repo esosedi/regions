@@ -33,7 +33,7 @@ osmeRegions.geoJSON('US'/*addr*/, {lang: 'de'}, function (data) {
     *.removeEvent();
 })
 ```
-Where `addr` is OSM RelationId, [ISO3166-2](https://ru.wikipedia.org/wiki/ISO_3166-2) code(US/DE/GB or RU-MOS/US-TX ets, or [world's region name](https://en.wikipedia.org/wiki/Subregion)
+Where `addr` is OSM RelationId, [ISO3166-2](https://ru.wikipedia.org/wiki/ISO_3166-2) code(US/DE/GB or RU-MOS/US-TX etc, or [world's region name](https://en.wikipedia.org/wiki/Subregion)
 
 Information avail for 300k+ regions in 3 languages(en,de,ru) and some secret modes.
 But not all countries covered!
@@ -137,7 +137,8 @@ Recombination can be used to join any set of regions in one. This is usefull in 
 And you got mini Barcelona
 ![BARS](http://kashey.ru/maps/osme/img/r3.png)
 
-You can do anything (http://jsfiddle.net/9o9ak7fb/3/)
+You can do anything like country coloring (http://jsfiddle.net/9o9ak7fb/18/), or making "old" Moscow (http://jsfiddle.net/9o9ak7fb/17/).
+OSMe provide geo data, you provide logic.
 
 ```
 var countryColors={
