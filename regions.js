@@ -825,10 +825,39 @@
 
     })();
 
+    //Node.JS
     if (typeof exports === 'object') {
         module.exports = osmeRegions;
     }
     else {
+        //Browser
         global.osmeRegions = osmeRegions;
     }
+
+    //Yandex.Maps API
+    if (typeof ymaps === 'object' && ymaps.modules && ymaps.modules.define) {
+        ymaps.modules.define('osmeRegions', ["vow", "system.project"], function (provide, vow, project) {
+            provide(ymaps.osmeRegions = {
+                load: function (region, options) {
+                    var deferred = vow.defer();
+                    options = options || {};
+                    osmeRegions.geoJSON(region, {
+                        lang: options.lang || project.data.lang.substr(0, 2),
+                        quality: 'quality' in options ? options.quality : 1,
+                    }, function (data) {
+                        deferred.resolve({
+                            geoObjects: osmeRegions.toYandex(data).collection
+                        });
+                    }, function () {
+                        deferred.reject();
+                    });
+                    return deferred.promise();
+                }
+            });
+        });
+        //force execute
+        ymaps.modules.require('osmeRegions', function () {
+        });
+    }
+
 })(this);
