@@ -101,7 +101,7 @@
                 fixedPoints = [],
                 meta = [],
                 paths = regionId.length ? regionId : osmeData.paths[regionId],
-                segments = [],
+                //segments = [],
                 osmeWays = osmeData.ways;
 
             osmeData.wayCache = osmeData.wayCache || {};
@@ -144,17 +144,18 @@
                 fillRule: 'nonZero',
                 coordinates: coordinates,
                 path: paths,
-                fixedPoints: fixedPoints,
+                fixedPoints: fixedPoints
                 //segments: segments,
                 //ways: meta
             };
-        };
+        }
 
         /**
          * jQuery Ajax data transfer
+         * @param {String} path
          * @param {Function} callback
          * @param {Function) errorCallback
-     */
+        */
         function jq_load (path, callback, errorCallback) {
             jQuery.ajax({
                 type: 'GET',
@@ -177,16 +178,16 @@
 
         /**
          * Vanilla Ajax data transfer
+         * @param {String} path
          * @param {Function} callback
          * @param {Function) errorCallback
-     */
+        */
         function load (path, callback, errorCallback) {
             var xhr = new XMLHttpRequest();
             xhr.open("GET", path, true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200 || xhr.status === 304) {
-                        var response = false;
                         try {
                             var response = JSON.parse(xhr.responseText);
                             callback(response);
@@ -202,7 +203,7 @@
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
             xhr.send();
-        };
+        }
 
         /**
          * main decode function
@@ -313,17 +314,12 @@
                     }
                     var result = [];
                     for (i = 0, l1 = path2.length; i < l1; ++i) {
-                        var line = [];
                         for (j = 0, l2 = path2[i].length; j < l2; ++j) {
                             if (wset[Math.abs(path2[i][j])]) {
-                                //line.push(path2[i][j]);
                                 // path is full in
                                 result.push(path2[i]);
                             }
                         }
-                        //if (line.length) {
-                        //    result.push(line);
-                        //}
                     }
                     return result;
                 },
@@ -361,7 +357,7 @@
                     return false;
                 }
             }
-        };
+        }
 
         /**
          * recombination
@@ -487,7 +483,7 @@
                     return rpath;
                 }
 
-                var rpaths = [], way = 0, rpath = [], ord = 1;
+                var rpaths = [], rpath = [], ord = 1;
 
                 function tryJoinWay (rpath, way) {
                     if (!wayDirection[way]) {
@@ -503,8 +499,7 @@
                         rpath.push(+way);
                     } else {
                         // indirect
-                        var lw = 0,
-                            rwset = wayLookup[-wayDirection[way][2]];
+                        var rwset = wayLookup[-wayDirection[way][2]];
                         way = 0;
                         for (var j in rwset) {
                             rw = rwset[j];
@@ -571,7 +566,6 @@
                     if (freePass) {
                         rpaths.push(rpath[0]);
                         rpath = paths[freePass];
-                        //rpath.push.apply(rpath, paths[freePass]);
                         skip[freePass] = 1;
                         skipCnt++;
                     } else {
@@ -594,7 +588,7 @@
             }, 0);
         }
 
-        var HOST = 'http://esosedi.ru/_dataExport/regions/v1/';
+        var HOST = 'http://data.esosedi.org/regions/v1/';
         var cache = {};
 
         return {
@@ -627,12 +621,12 @@
              * @param {Number} [options.quality=0] Quality. 0 for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
              * @param {String} [options.type=''] Type of data. Can be empty or 'coast' (unstable mode).
              * @param {Boolean} [options.noache] Turns off internal cache.
-             * @param {Function} [options.postFilter] filtering function
-             * @param {String|Object} [options.recombine] recombination function
-             * @param {Object} [options.scheme] another recombination function
-             * @param {function) callback
-         * @param {function) [errorCallback]
-         */
+             * @param {Function} [options.postFilter] filtering function.
+             * @param {String|Object} [options.recombine] recombination function.
+             * @param {Object} [options.scheme] another recombination function.
+             * @param {Function) callback
+             * @param {Function) [errorCallback]
+             */
             geoJSON: function (region, options, callback, errorCallback) {
                 if (!errorCallback) {
                     errorCallback = function (e) {
@@ -671,7 +665,7 @@
 
             /**
              * parse default data format
-             * @param {Strings} data
+             * @param {String} data
              * @returns {geoJSON}
              */
             parseData: function (data, options) {
@@ -843,7 +837,7 @@
                     options = options || {};
                     osmeRegions.geoJSON(region, {
                         lang: options.lang || project.data.lang.substr(0, 2),
-                        quality: 'quality' in options ? options.quality : 1,
+                        quality: 'quality' in options ? options.quality : 0
                     }, function (data) {
                         deferred.resolve({
                             geoObjects: osmeRegions.toYandex(data).collection
