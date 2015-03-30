@@ -1,19 +1,17 @@
-Module for Yandex, Google or other JS Maps for showing countries and regions of the world.
+This is a module designed for Yandex, Google or any other JS Maps to show countries, counties and regions of the world.
 
-Based on [osme](https://github.com/theKashey/osme) and `regions` or [Yandex.Maps](http://api.yandex.com/maps/doc/jsapi/).
-Information is from [OpenStreetMap](http://openstreetmap.org), [Wikipedia](http://en.wikipedia.org), [GeoNames](http://geonames.org), [eSosedi](http://ru.esosedi.org) and some other sources.
+The module is based on [osme](https://github.com/theKashey/osme) and `regions` or [Yandex.Maps](http://api.yandex.com/maps/doc/jsapi/).
+Runs on top of information from [OpenStreetMap](http://openstreetmap.org), [Wikipedia](http://en.wikipedia.org), [GeoNames](http://geonames.org), [eSosedi](http://ru.esosedi.org) and some other sources.
 
+Created for and used by project [esosedi.org](http://ru.esosedi.org).
 
-Created for and used by project [esosedi.org](http://ru.esosedi.org). ! This not just a lib, not just an API - this is service.
+! And remember, this is neither lib nor API. This is a service !
 
-!It also may contain, contain and will `contain errors`, holes and mistakes.!
+It also, as any UGC project, may contain, contain and will `contain errors`, holes and mistakes.!
 
 ![US](http://kashey.ru/maps/osme/img/r2.png)
 
-Data format is quite simple and compact. It is look like [topojson](https://github.com/mbostock/topojson), but more "binary" and contains data like schemes etc.
-After all you will get standard geoJSON. You can use it by your own risk.
-
-Navigator can be found at [data.esosedi.org](http://data.esosedi.org/)
+The module consists of two parts - this client-side regions.js and server-side at data.esosedi.org. Navigator can be found there - [data.esosedi.org](http://data.esosedi.org/)
 
 Usage is simple:
 ```
@@ -34,6 +32,7 @@ osmeRegions.geoJSON('US'/*addr*/, {lang: 'de'}, function (data) {
 })
 ```
 Where `addr` is OSM RelationId, [ISO3166-2](https://ru.wikipedia.org/wiki/ISO_3166-2) code(US/DE/GB or RU-MOS/US-TX etc, or [world's region name](https://en.wikipedia.org/wiki/Subregion)
+```
 
 Information avail for 300k+ regions in 3 languages(en,de,ru) and some secret modes.
 But not all countries covered!
@@ -43,6 +42,9 @@ This module uses CORS to transport JSON via different hosts.
 You can store geojson produced by this module, or cache packed json files from data server.
 You can change data server by executing `osmeRegions.setHost` command.
 You have to provide copyright information.
+
+Data format is quite simple and compact. It is look like [topojson](https://github.com/mbostock/topojson), but more "binary" and contains data like schemes etc.
+After all you will get standard geoJSON. You can use it by your own risk.
 
 
 More Examples:

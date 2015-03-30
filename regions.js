@@ -63,8 +63,17 @@
             return Math.min(85, Math.max(-85, y));
         }
 
+        function fromBase64 (input) {
+            input = input.replace(/_/g, '/').replace(/-/g, '+');
+            if (typeof atob != "undefined") {
+                return atob(input);
+            } else {
+                return new Buffer(input, 'base64').toString('binary');
+            }
+        }
+
         function decodeLineBlock (encodedCoordinates) {
-            var byteVector = atob(encodedCoordinates.replace(/_/g, '/').replace(/-/g, '+')),
+            var byteVector = fromBase64(encodedCoordinates),
                 byteVectorLength = byteVector.length,
                 bounds = [
                     [decodeByteVector(byteVector.substr(0, 4), 4) * codingCoefficient, decodeByteVector(byteVector.substr(4, 4), 4) * codingCoefficient],
@@ -101,7 +110,7 @@
                 fixedPoints = [],
                 meta = [],
                 paths = regionId.length ? regionId : osmeData.paths[regionId],
-                //segments = [],
+            //segments = [],
                 osmeWays = osmeData.ways;
 
             osmeData.wayCache = osmeData.wayCache || {};
@@ -254,7 +263,7 @@
                             properties: {
                                 osmId: i,
                                 level: regions[i].level,
-                                properties: regions[i].property,
+                                properties: regions[i].property || {},
                                 parents: regions[i].parents,
                                 hintContent: regions[i].name,
                                 name: regions[i].name,
@@ -295,13 +304,14 @@
          * @returns {RegionObject}
          */
         function wrapRegion (rid, data) {
-            var meta = data.regions[rid];
+            var meta = data.regions[rid],
+                prop = meta.property || {};
             return {
                 osmId: rid,
-                geoNamesId: meta.property.geoNamesId,
-                iso: meta.property.iso3166,
+                geoNamesId: prop.geoNamesId,
+                iso: prop.iso3166,
                 level: meta.level,
-                properties: meta.property,
+                properties: prop,
 
                 getBorderWith: function (id) {
                     var wset = {}, i, l1, j, l2,
@@ -578,7 +588,9 @@
 
             }
 
-            rpaths.push(rpath[0]);
+            if (rpath) {
+                rpaths.push(rpath[0]);
+            }
             return getGeometry(rpaths, regionsData);
         }
 
