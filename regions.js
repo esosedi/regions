@@ -105,13 +105,48 @@
             return osmeData.wayCache[wayId] = decodeLineBlock(lineBlock);
         }
 
-        function getGeometry (regionId, osmeData) {
+
+        function getFixedGeometry (regionId, osmeData) {
+            return getGeometry(regionId, osmeData, {fixDegenerate: true})
+        }
+
+        function EQ (first, second, diff) {
+            diff = diff || 1e-9;
+            var dx = Math.abs(second[0] - first[0]),
+                dy = Math.abs(second[1] - first[1]);
+            return dx < diff && dy < diff;
+        }
+
+        function fixDegenerate (way, path) {
+            var offset = 0,
+                l = way.length,
+                lp = path.length,
+                limit = Math.min(l, lp),
+                delta = 10 / 0xFFFF; //10 HOPS
+            lp--;
+            if (lp < 1) {
+                return 0;
+            }
+
+            for (var i = 0; i < limit; ++i) {
+                if (EQ(way[i], path[lp - i], delta)) {
+                    offset++;
+                } else {
+                    break;
+                }
+            }
+
+            return offset;
+        }
+
+        function getGeometry (regionId, osmeData, options) {
             var coordinates = [],
                 fixedPoints = [],
                 meta = [],
                 paths = regionId.length ? regionId : osmeData.paths[regionId],
             //segments = [],
-                osmeWays = osmeData.ways;
+                osmeWays = osmeData.ways,
+                options = options || {};
 
             osmeData.wayCache = osmeData.wayCache || {};
 
@@ -133,10 +168,28 @@
                         way = way.slice(0);
                         way.reverse();
                     }
-                    // edges have same coordinates
-                    if (pathCoordinates.length) {
-                        pathCoordinates.length = pathCoordinates.length - 1;
+                    if (options.fixDegenerate) {
+                        var offset = fixDegenerate(way, pathCoordinates);
+                        if (offset) {
+                            way = way.slice(offset);
+                        }
+                        if (i == l - 1) {
+                            var tw = way.slice(0);
+                            tw.reverse();
+                            offset = fixDegenerate(pathCoordinates, way);
+                            if (offset) {
+                                offset--;
+                                way.length = way.length - offset;
+                                pathCoordinates = pathCoordinates.slice(offset);
+                            }
+                        }
+                    } else {
+                        // edges have same coordinates
+                        if (pathCoordinates.length) {
+                            pathCoordinates.length = pathCoordinates.length - 1;
+                        }
                     }
+
                     pathCoordinates.push.apply(pathCoordinates, way);
                     segmentFixedPoints.push(pathCoordinates.length - 1);
                     ways.push(wayId);
@@ -157,32 +210,6 @@
                 //segments: segments,
                 //ways: meta
             };
-        }
-
-        /**
-         * jQuery Ajax data transfer
-         * @param {String} path
-         * @param {Function} callback
-         * @param {Function) errorCallback
-        */
-        function jq_load (path, callback, errorCallback) {
-            jQuery.ajax({
-                type: 'GET',
-                url: path,
-                contentType: 'application/json',
-                xhrFields: {
-                    withCredentials: false
-                },
-
-                success: function (data) {
-                    callback(data);
-                },
-
-                error: function (error) {
-                    window.console && console.error('osmeRegions error:', error);
-                    errorCallback(error);
-                }
-            });
         }
 
         /**
@@ -591,7 +618,8 @@
             if (rpath) {
                 rpaths.push(rpath[0]);
             }
-            return getGeometry(rpaths, regionsData);
+
+            return getFixedGeometry(rpaths, regionsData);
         }
 
         function nextTick (callback, args) {
@@ -831,7 +859,7 @@
 
     })();
 
-    //Node.JS
+//Node.JS
     if (typeof exports === 'object') {
         module.exports = osmeRegions;
     }
@@ -840,7 +868,7 @@
         global.osmeRegions = osmeRegions;
     }
 
-    //Yandex.Maps API
+//Yandex.Maps API
     if (typeof ymaps === 'object' && ymaps.modules && ymaps.modules.define) {
         ymaps.modules.define('osmeRegions', ["vow", "system.project"], function (provide, vow, project) {
             provide(ymaps.osmeRegions = {
@@ -866,4 +894,5 @@
         });
     }
 
-})(this);
+})
+(this);

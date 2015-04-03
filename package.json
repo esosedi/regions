@@ -1,0 +1,24 @@
+{
+  "name": "osme",
+  "version": "1.0.0",
+  "description": "Provides geometry for regions of the world",
+  "main": "nodemodule.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/esosedi/regions.git"
+  },
+  "keywords": [
+    "maps",
+    "osm",
+    "regions"
+  ],
+  "author": "Anton Korzunov <kashey@yandex-team.ru>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/esosedi/regions/issues"
+  },
+  "homepage": "https://github.com/esosedi/regions"
+}

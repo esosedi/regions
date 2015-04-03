@@ -4,6 +4,7 @@
         Update geometry of `RU`.
     disputedBorders:
         Move `TW` to `CN` in `RU` scheme.
+        Move `EH` to `MA` in `RU` scheme.
     Schemes:
         Add `LS` to `ZA` as hole.
         Add `TL` to `ID` as hole.
