@@ -629,6 +629,7 @@
         }
 
         var HOST = 'http://data.esosedi.org/regions/v1/';
+        var DEBUG = true;
         var cache = {};
 
         return {
@@ -638,6 +639,13 @@
              */
             setHost: function (host) {
                 HOST = host;
+            },
+
+            /**
+             * @param {Boolean} debug
+             */
+            setDebug: function (debug) {
+                DEBUG = Boolean(debug);
             },
 
             coordinateDecode: decodeLineBlock,
@@ -660,7 +668,7 @@
              * @param {String} [options.lang='en'] Language (en,de,ru).
              * @param {Number} [options.quality=0] Quality. 0 for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
              * @param {String} [options.type=''] Type of data. Can be empty or 'coast' (unstable mode).
-             * @param {Boolean} [options.noache] Turns off internal cache.
+             * @param {Boolean} [options.nocache] Turns off internal cache.
              * @param {Function} [options.postFilter] filtering function.
              * @param {String|Object} [options.recombine] recombination function.
              * @param {Object} [options.scheme] another recombination function.
@@ -749,7 +757,7 @@
                                 })
                         );
                     } else {
-                        window.console && console.log('osme line fail', line);
+                        DEBUG && window.console && console.log('osme line fail', line);
                     }
                 }
                 return {
