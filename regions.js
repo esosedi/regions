@@ -773,10 +773,15 @@
                             object.options.set(styleToYandex(fn(idTable[object.properties.get('osmId')], object)));
                         });
                     },
-                    addEvent: function (eventName, callback) {
+                    /**
+                     * @param {String|Array.<String>} eventName
+                     * @param {Function} callback
+                     * @param {Object} [ctx]
+                     */
+                    addEvent: function (eventName, callback, ctx) {
                         collection.events.add(eventName, function (event) {
                             var target = event.get('target');
-                            callback(idTable[target.properties.get('osmId')], [eventName, 'yandex'], target, event);
+                            callback.call(ctx, idTable[target.properties.get('osmId')], [eventName, 'yandex'], target, event);
                         });
                     },
                     removeEvent: function (event) {
@@ -811,10 +816,15 @@
                             return styleToGoogle(fn(idTable[object.getProperty('osmId')], object));
                         });
                     },
-                    addEvent: function (eventName, callback) {
+                    /**
+                     * @param {String} eventName
+                     * @param {Function} callback
+                     * @param {Object} [ctx]
+                     */
+                    addEvent: function (eventName, callback, ctx) {
                         collection.addListener(eventName, function (event) {
                             var target = event.feature;
-                            callback(idTable[target.getProperty('osmId')], [eventName, 'google'], target, event);
+                            callback.call(ctx, idTable[target.getProperty('osmId')], [eventName, 'google'], target, event);
                         });
                     },
                     removeEvent: function (event) {
