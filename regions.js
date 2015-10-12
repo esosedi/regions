@@ -629,7 +629,7 @@
         }
 
         var HOST = 'http://data.esosedi.org/regions/v1/';
-        var GEOCODEHOST = 'http://data.esosedi.org/gecode/v1/';
+        var GEOCODEHOST = 'http://data.esosedi.org/geocode/v1';
         var DEBUG = true;
         var cache = {};
 
@@ -846,6 +846,13 @@
             geocode: function (point, options, callback, errorcallback) {
                 var addr = GEOCODEHOST;
                 addr += "?point=" + (+point[0]) + ',' + (+point[1]);
+
+                if (typeof options == "function") {
+                    errorcallback = callback;
+                    callback = options;
+                    options = {};
+                }
+
                 if (options.seq) {
                     addr += '&seq' + (+options.seq);
                 }
@@ -854,7 +861,9 @@
                 }
                 load(addr, function (json) {
                     callback(json);
-                }, errorcallback)
+                }, function (err) {
+                    errorcallback && errorcallback(err);
+                })
             }
         };
 
