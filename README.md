@@ -34,8 +34,12 @@ osmeRegions.geoJSON('US'/*addr*/, {lang: 'de'}, function (data) {
 
 Where `addr` is OSM RelationId, [ISO3166-2](https://ru.wikipedia.org/wiki/ISO_3166-2) code(US/DE/GB or RU-MOS/US-TX etc, or [world's region name](https://en.wikipedia.org/wiki/Subregion)
 
+If you dont know relationId for region you need, you can:
+1. Traverse map database on http://data.esosedi.org.
+2. Use reverse geocode - http://data.esosedi.org/geocode/v1?[lng=(ru|en)]&point=x,y[&seq=?][&callback=?]
+
 Information avail for 300k+ regions in 3 languages(en,de,ru) and some secret modes.
-But not all countries covered!
+PS: not all countries covered!
 
 This module uses CORS to transport JSON via different hosts.
 

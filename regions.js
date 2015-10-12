@@ -629,6 +629,7 @@
         }
 
         var HOST = 'http://data.esosedi.org/regions/v1/';
+        var GEOCODEHOST = 'http://data.esosedi.org/gecode/v1/';
         var DEBUG = true;
         var cache = {};
 
@@ -668,7 +669,7 @@
              * @param {String} [options.lang='en'] Language (en,de,ru).
              * @param {Number} [options.quality=0] Quality. 0 for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
              * @param {String} [options.type=''] Type of data. Can be empty or 'coast' (unstable mode).
-             * @param {Boolean} [options.nocache] Turns off internal cache.
+             * @param {Boolean} [options.noache] Turns off internal cache.
              * @param {Function} [options.postFilter] filtering function.
              * @param {String|Object} [options.recombine] recombination function.
              * @param {Object} [options.scheme] another recombination function.
@@ -757,7 +758,7 @@
                                 })
                         );
                     } else {
-                        DEBUG && window.console && console.log('osme line fail', line);
+                        window.console && console.log('osme line fail', line);
                     }
                 }
                 return {
@@ -821,6 +822,29 @@
                         collection.removeListener(event);
                     }
                 };
+            },
+
+            /**
+             * Reverse geocode
+             * @param {Numbrer[]} point - Point.
+             * @param {Object} options
+             * @param {Number} options.seq - Sequence number.
+             * @param {String} options.lang - Language.
+             * @param {Function} callback
+             * @param {Function} [errorcallback]
+             */
+            geocode: function (point, options, callback, errorcallback) {
+                var addr = GEOCODEHOST;
+                addr += "?point=" + (+point[0]) + ',' + (+point[1]);
+                if (options.seq) {
+                    addr += '&seq' + (+options.seq);
+                }
+                if (options.lang) {
+                    addr += '&lng' + (+options.lang);
+                }
+                load(addr, function (json) {
+                    callback(json);
+                }, errorcallback)
             }
         };
 
@@ -880,6 +904,13 @@
     if (typeof ymaps === 'object' && ymaps.modules && ymaps.modules.define) {
         ymaps.modules.define('osmeRegions', ["vow", "system.project"], function (provide, vow, project) {
             provide(ymaps.osmeRegions = {
+
+                /**
+                 * @name osmeRegions.load
+                 * @param {String} region RegionId
+                 * @param {Object} options
+                 * @returns {vow.Promise}
+                 */
                 load: function (region, options) {
                     var deferred = vow.defer();
                     options = options || {};
@@ -890,6 +921,25 @@
                         deferred.resolve({
                             geoObjects: osmeRegions.toYandex(data).collection
                         });
+                    }, function () {
+                        deferred.reject();
+                    });
+                    return deferred.promise();
+                },
+
+                /**
+                 * @name osmeRegions.geocode
+                 * @param {Number[]} point
+                 * @param {Object} options
+                 * @returns {vow.Promise}
+                 */
+                geocode: function (point, options) {
+                    var deferred = vow.defer();
+                    options = options || {};
+                    osmeRegions.geoJSON(point, {
+                        lang: options.lang || project.data.lang.substr(0, 2),
+                    }, function (data) {
+                        deferred.resolve(data);
                     }, function () {
                         deferred.reject();
                     });
