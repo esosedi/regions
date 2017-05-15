@@ -1,10 +1,17 @@
 {
   "name": "osme",
-  "version": "1.0.0",
+  "version": "1.1.5",
   "description": "Provides geometry for regions of the world",
-  "main": "nodemodule.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "babel src -d lib",
+    "bundle": "browserify lib/browserBundle.js > bundle.js",
+    "prepublish": "npm run build",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+
+    "test": "npm run test:pick -- 'tests/*.spec.js'",
+    "test:pick": "BABEL_ENV=test mocha --compilers js:babel-core/register"
   },
   "repository": {
     "type": "git",
@@ -13,12 +20,26 @@
   "keywords": [
     "maps",
     "osm",
-    "regions"
+    "regions",
+    "google maps",
+    "leaflet",
+    "country shape"
   ],
-  "author": "Anton Korzunov <kashey@yandex-team.ru>",
+  "author": "Anton Korzunov <thekashey@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/esosedi/regions/issues"
   },
-  "homepage": "https://github.com/esosedi/regions"
+  "homepage": "https://github.com/esosedi/regions",
+  "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-eslint": "^7.2.3",
+    "babel-preset-latest": "^6.16.0",
+    "babel-preset-stage-1": "^6.16.0",
+    "browserify": "^14.3.0",
+    "eslint": "^3.19.0",
+    "eslint-plugin-mocha": "^4.9.0",
+    "chai": "^3.5.0",
+    "mocha": "^3.3.0"
+  }
 }

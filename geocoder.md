@@ -25,10 +25,10 @@ And some of them (not all!) has link to names
 ```
 "names": {
     "60189": {
-        "name": "Россия",             // name
+        "name": "Р РѕСЃСЃРёСЏ",             // name
         "level": 2,                   // admin_level
         "iso1": "RU",                 // iso3166-1
-        "visibleName": "Россия",      // esosedi name
+        "visibleName": "Р РѕСЃСЃРёСЏ",      // esosedi name
         "references": {               // external reference
             "osm": {
                 "relationId": 60189   // to osm relation id

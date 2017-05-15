@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Визуализатор данных регионов</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script type="text/javascript"
+            src="http://api-maps.yandex.ru/2.1/?lang=ru-RU&mode=debug"></script>
+    <script type="text/javascript" src="../bundle.js"></script>
+    <script type="text/javascript" src="http://yandex.st/jquery/1.8.2/jquery.min.js"></script>
+</head>
+
+<style>
+    .regionList {
+        font-size: 10px;
+        height: 800px;
+        width: 280px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .legend a {
+        font-size: 14px;
+        margin-right: 10px;
+        display: inline-block;
+    }
+</style>
+
+<div class="legend"></div>
+<table width=100% height=800>
+    <tr valign=top>
+        <td>
+            <div id="map" style="height: 100%; width: 100%; position: relative;"></div>
+        </td>
+        <td width="280">
+            <div class="regionList"></div>
+        </td>
+    </tr>
+</table>
+
+</body>
+
+<script type="text/javascript">
+
+
+    var geoMap = 0;
+    ymaps.ready(function () {
+        geoMap = new ymaps.Map('map', {
+            center: [0, 0],
+            type: "yandex#hybrid",
+            zoom: 2
+        }, {
+            geoObjectBalloonPanelMapMaxArea: Infinity
+        });
+
+
+        var depth = [], names = {};
+
+        function buildAddr () {
+            var d = $(".legend");
+            d.html('');
+            for (var i in depth) {
+                (function (i) {
+                    var name = depth[i];
+                    var oname = names[name] || name;
+                    var l = $("<a href='#'>" + oname + "</a>");
+                    l.click(function () {
+                        depth.length = i;
+                        load(name);
+                    });
+                    l.appendTo(d);
+                })(i);
+            }
+        }
+
+        var lastCollection = 0;
+
+        function load (addr, callback) {
+            osmeRegions.geoJSON(addr, {lang: 'ru'}, function (data) {
+                var thisId = data.metaData.osmId;
+                var list = [];
+                for (var i in data.features) {
+                    var iso = '';
+                    if (data.features[i].properties.properties.iso3166) {
+                        iso = ' (' + data.features[i].properties.properties.iso3166 + ')';
+                    }
+                    list.push("<li>" + data.features[i].properties.name + iso + "</li>");
+                    if (data.features[i].properties.osmId == thisId) {
+                        names[addr] = data.features[i].properties.name;
+                    }
+                }
+                $(".regionList").html("<ul>" + list.join('') + "</ul>");
+
+                depth.push(addr);
+                buildAddr();
+
+                var collection = osmeRegions.toYandex(data, ymaps);
+                if (lastCollection) {
+                    lastCollection.remove(geoMap);
+                }
+                lastCollection = collection;
+                collection.add(geoMap);
+
+                geoMap.setBounds(collection.collection.getBounds(), {duration: 300});
+                var strokeColors = [
+                    '#000',
+                    '#F0F',
+                    '#00F',
+                    '#0FF',
+                ];
+                var meta = data.metaData,
+                        minLevel = meta.levels[0],
+                        maxLevel = meta.levels[1] + 1;
+                collection.setStyles(function (object, yobject) {
+                    var level = object.properties.level;
+                    yobject.properties.set('balloonContent', "<div style=''>" + JSON.stringify(object.properties).split(',').join(", ") + "</div>");
+                    return ({
+                        zIndex: level,
+                        zIndexHover: level,
+                        strokeWidth: Math.max(1, level == 2 ? 2 : (maxLevel - level)),
+                        strokeColor: strokeColors[maxLevel - level] || '#000',
+                        fillColor: '#FFE2',
+                        balloonPanelMaxMapArea: Infinity,
+                        balloonAutoPan: false,
+                        autoPanDuration: 5000,
+                        draggable: true
+                    });
+                });
+
+                collection.addEvent('dblclick', function (object, type, target) {
+                    var osmId = object.properties.osmId;
+                    event.preventDefault();
+                    if (osmId) {
+                        geoMap.setBounds(target.geometry.getBounds());
+                        setTimeout(function () {
+                            load('' + osmId);
+                        }, 1);
+                    }
+                });
+                if (callback) {
+                    callback();
+                }
+            });
+        }
+
+        load('world');
+        window.rload = load;
+
+    });
+</script>
+</html>

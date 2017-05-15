@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Geocode example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script type="text/javascript"
+            src="http://api-maps.yandex.ru/2.1/?lang=ru-RU&mode=debug"></script>
+    <script type="text/javascript" src="../bundle.js"></script>
+    <script type="text/javascript" src="http://yandex.st/jquery/1.8.2/jquery.min.js"></script>
+</head>
+
+<style>
+    .regionList {
+        font-size: 10px;
+        height: 600px;
+        width: 280px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .legend a {
+        font-size: 14px;
+        margin-right: 10px;
+        display: inline-block;
+    }
+</style>
+
+<div class="legend"></div>
+<table width=100% height=600>
+    <tr valign=top>
+        <td>
+            <div id="map" style="height: 100%; width: 100%; position: relative;"></div>
+        </td>
+        <td width="280">
+            <div class="regionList"></div>
+        </td>
+    </tr>
+</table>
+
+</body>
+
+<script type="text/javascript">
+
+
+    var geoMap = 0;
+    ymaps.ready(function () {
+        myMap = new ymaps.Map('map', {
+            center: [55.76, 37.64], // Москва
+            zoom: 10
+        });
+        var geoMap = myMap;
+
+        myMap.events.add(['actionend'], function () {
+            getLocation();
+        });
+
+        var location_tm = 0;
+
+        function getLocation() {
+            if (!location_tm) {
+                location_tm = setTimeout(function () {
+                    location_tm = 0;
+                    grabLocation();
+                }, 100);
+            }
+        }
+
+        getLocation();
+
+        function grabLocation() {
+            // Map center and size
+            var center = myMap.getCenter(),
+                bounds = myMap.getBounds(),
+                geosize = [bounds[1][0] - bounds[0][0], bounds[1][1] - bounds[0][1]],
+                dim = myMap.container.getSize(),
+                dsize = Math.min(dim[0] / 512, dim[1] / 512),
+                gsize = Math.min(geosize[0] / dsize, geosize[1] / dsize),
+                legend = [];
+            // --------****************************---------------------------
+
+            // call geocoder
+
+            osmeRegions.geocode(center, function (data) {
+                var select = 0,
+                    targetOid = 0;
+
+                //find and filter by size
+                for (var l = 8; l > 0; l--) {
+                    // l is a Level. OpenStreetMap releation id administrative level
+                    var oid = data.target['l' + l];
+                    if (oid && data.names[oid]) {
+                        var obounds = data.names[oid].boundingBox,
+                                rsize = [obounds[1][0] - obounds[0][0], obounds[1][1] - obounds[0][1]];
+                        if (rsize[0] < gsize && rsize[1] < gsize) {
+                            legend = [];
+                            select = 0;
+                            targetOid = oid;
+                        } else {
+                            if (!select) select = oid;
+                        }
+                        legend.unshift(data.names[oid].name);
+                    }
+                }
+                $('.regionList').html(legend.join('<br/>'));
+                if (!targetOid) {
+                    targetOid = data.target.ll;
+                }
+                loadRegion(select, targetOid);
+            });
+        }
+
+        var lastRegion = 0,
+                collection = 0;
+
+        function loadRegion(oid, targetOid) {
+            oid = oid || targetOid;
+            lastRegion = oid;
+
+            osmeRegions.geoJSON(oid, {
+                lang: 'ru',
+                quality: -1
+            }, function (data, pure) {
+                if (collection) {
+                    var lastCollection = collection;
+                }
+                collection = osmeRegions.toYandex(data, ymaps);
+                collection.setStyles(function (object, yobject) {
+                    var level = object.properties.level;
+                    yobject.properties.set('balloonContent', "<div style=''>" + JSON.stringify(object.properties).split(',').join(", ") + "</div>");
+                    return ({
+                        zIndex: level,
+                        zIndexHover: level,
+                        strokeWidth: level / 2,
+                        strokeColor: '#4445',
+                        strokeStyle: 'dash',
+                        fillColor: object.properties.osmId == targetOid ? '#F00' : '#4446',
+                        fillOpacity: 0.7
+                    });
+                });
+                collection.add(myMap);
+                if (lastCollection) {
+                    lastCollection.remove(myMap);
+                }
+            });
+        }
+
+    });
+</script>
+</html>
