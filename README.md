@@ -1,8 +1,8 @@
 # regions (code name osme)
  This is a module designed for 
- (Yandex)[https://tech.yandex.com/maps/], 
- (Google)[https://developers.google.com/maps/], 
- (Leaflet)[http://leafletjs.com/], 
+ [Yandex](https://tech.yandex.com/maps/), 
+ [Google](https://developers.google.com/maps/), 
+ [Leaflet](http://leafletjs.com/), 
  or any other JS Maps to show countries, counties and regions of the world.
  Each time you want to display borders - use the regions, Luke.
  
@@ -30,12 +30,15 @@ Plus we include build-in wrappers for Yandex Maps API, Google Maps API and Leafl
   
   All collections will have interface of .add .remove .setStyles .addEvent .removeEvent.
   
+  Result it very simple - you can display any continent, country or state on a map.
 ![US](http://kashey.ru/maps/osme/img/r2.png)
 
 # As Service
 
 The module consists in two parts - this client-side regions.js and server-side at [data.esosedi.org](http://data.esosedi.org). 
 Server-side also implements online `navigator` via database to help you find proper place.
+
+* base service runs as 'http' service. Not https!
 
 # What I can load?
  Data is generated in 5 steps. Each step generate some subset.
