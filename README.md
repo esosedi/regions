@@ -20,16 +20,17 @@ Created for and used by [esosedi.org](http://ru.esosedi.org) project - one of la
 
 # API
 There is only 2 primary commands:
-  * osmeRegions.geoJSON(addr, options, callback) - to get geoJSON for a region
-  * osmeRegions.geocode(point, options, callback, errorCallback)  - to find region by coordinates
+  * .geoJSON(addr, [options], [callback]):Promise - to get geoJSON for a region
+  * .geocode(point, [options], [callback], [errorCallback]):Promise  - to find region by coordinates
 
 Plus we include build-in wrappers for Yandex Maps API, Google Maps API and Leaflet.
-  * osmeRegions.toGoogle
-  * osmeRegions.toYandex
-  * osmeRegions.toLeaflet
+  * .toGoogle(geoJson)
+  * .toYandex(geoJson)
+  * .toLeaflet(geoJson)
   
   All collections will have interface of .add .remove .setStyles .addEvent .removeEvent.
   
+ 
   Result it very simple - you can display any continent, country or state on a map.
 ![US](http://kashey.ru/maps/osme/img/r2.png)
 
@@ -41,12 +42,15 @@ Server-side also implements online `navigator` via database to help you find pro
 * base service runs as 'http' service. Not https!
 
 # What I can load?
- Data is generated in 5 steps. Each step generate some subset.
+ Data is generated in 5 steps. Each step generates some subset.
  
- Each `addr` address one or more `parents`, plus all direct children.
+ Each `addr`, you can use in .geoJSON is ID of some region - `parent`, plus it's all direct children.
+ `is world->countries, country->states, state->county`
  
  In case of country, all states will be included, even if they are not direct children.
+ Sometimes something can exists between iso3166-2 states and iso3166-1 country. Macro or stat region, for example.
  
+ So, you can load: 
  * `world` - all countries of the World.
  * geoScheme - 21 macro region of the World.
  Africa, Americas, Asia, Europe, Oceania, Eastern Africa, Middle Africa, Northern Africa, Southern Africa, Western Africa, Cariebbean, Central America, Northern America, South America, Central Asia, Eastern Asia, South-Eastern Asia, Southern Asia, Western Asia, Eastern Europe, Northern Europe, Southern Europe, Western Europe, Australia and New Zealand, Melanesia, Micronesia, Polynesia.
@@ -57,8 +61,14 @@ Server-side also implements online `navigator` via database to help you find pro
  Ie - you can get contour of USA using `US` or `148838`. Same meaning.
 
 # Example
+* And check /examples folder!
 
-Usage is simple:
+Supershort example
+ ```javascript
+ osmeRegions.geoJSON('FR').then( geojson => osmeRegions.toGoogle(geojson).add(map));
+ ```
+
+A bit bigger one:
 ```
 // ask for some region
 osmeRegions.geoJSON('US'/*addr*/, {lang: 'de'}, function (data) {
