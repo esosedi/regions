@@ -69,8 +69,8 @@ var osmeRegions = /** @lends osmeRegions */{
      * @param {Function} [options.postFilter] filtering function.
      * @param {String|Object} [options.recombine] recombination function.
      * @param {Object} [options.scheme] another recombination function.
-     * @param {Function) [callback]
-     * @param {Function) [errorCallback]
+     * @param {Function} [callback]
+     * @param {Function} [errorCallback]
      * @return {Promise}
      */
     geoJSON: function (region, options, _callback, _errorCallback) {
@@ -192,7 +192,7 @@ var osmeRegions = /** @lends osmeRegions */{
 
     /**
      * Reverse geocode
-     * @param {Numbrer[]} point - Point.
+     * @param {Number[]} point - Point.
      * @param {Object} [options]
      * @param {Number} [options.seq] - Sequence number.
      * @param {String} [options.lang] - Language.
