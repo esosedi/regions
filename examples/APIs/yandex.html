@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <script type="text/javascript"
             src="http://api-maps.yandex.ru/2.1/?lang=en-US"></script>
-    <script type="text/javascript" src="../bundle.js"></script>
+    <script type="text/javascript" src="../../umd/index.js"></script>
 </head>
 <body>
 <style>
@@ -32,11 +32,11 @@
             zoom: 2
         });
 
-        osmeRegions.geoJSON('world', {
+        osme.geoJSON('world', {
             lang: 'en',
             type: 'coast'
         }).then(data => {
-            var collection = osmeRegions.toYandex(data, ymaps);
+            var collection = osme.toYandex(data, ymaps);
             collection.add(geoMap1);
         });
     });

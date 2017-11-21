@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Disputed borders</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script type="text/javascript"
+            src="http://api-maps.yandex.ru/2.1/?lang=en-US"></script>
+    <script type="text/javascript" src="../../umd/index.js"></script>
+</head>
+<body>
+<style>
+    .map {
+        width: 100%;
+        height: 600px;
+    }
+
+    table td {
+        width: 50%;
+    }
+</style>
+<div id="map1" class="map"></div>
+
+
+</body>
+
+<script type="text/javascript">
+  ymaps.ready(function () {
+    var geoMap1 = new ymaps.Map('map1', {
+      center: [0, 0],
+      type: "yandex#map",
+      zoom: 2
+    });
+
+    osme.geoJSON('349035', {lang: 'en'}, function (data, pureData) {
+      var coords = osme.recombine(pureData, { // yes, you can use pure data
+        filter: function (region) {
+        // somethere in Province of Barcelona (349035) and Barcelona(2417889) or adjacent
+        // remember - you have to discard #349035 or you got duplicate.
+          return region.hasParent(349035) && (region.hasBorderWith(2417889) || region.osmId == 2417889);
+        }
+      });
+      var geoJson = {
+        features: coords.coordinates.map(coord => ({
+          type: "Feature",
+          geometry: {
+            type: 'Polygon',
+            coordinates: [coord]
+          }
+        }))
+      };
+
+      var collection1 = osme.toYandex(data, ymaps);
+      collection1.setStyles(() => ({opacity:0.2}));
+      collection1.add(geoMap1);
+
+
+      var collection = osme.toYandex(geoJson, ymaps);
+      collection.add(geoMap1);
+    });
+  });
+</script>
+</html>

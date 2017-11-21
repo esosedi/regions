@@ -1,10 +1,15 @@
 # regions (code name osme)
- This is a module designed for 
- [Yandex](https://tech.yandex.com/maps/), 
- [Google](https://developers.google.com/maps/), 
- [Leaflet](http://leafletjs.com/), 
- or any other JS Maps to show countries, counties and regions of the world.
- Each time you want to display borders - use the regions, Luke.
+The source of World's administrative divisions.
+
+This is a module designed for: 
+ - [Yandex](https://tech.yandex.com/maps/), 
+ - [Google](https://developers.google.com/maps/), 
+ - [Leaflet](http://leafletjs.com/), 
+ - any other JS Maps to outline countries, counties and regions of the world.
+ - being just a getJSON provider
+ 
+ 
+Each time you want to display borders - use the regions, Luke.
  
 [![NPM](https://nodei.co/npm/osme.png?downloads=true&stars=true)](https://nodei.co/npm/osme/)
 
@@ -14,72 +19,70 @@ Created for and used by [esosedi.org](http://ru.esosedi.org) project - one of la
 
 * This is neither lib nor API. This is a service.
 
-# Connect
- * as npm package for any modern build system.
- * as simple script, `bundle.js`.
-
+```js
+ import osme from 'osme';
+```
+or 
+```html
+ <script src="https://unpkg.com/osme"></script>
+ // use window.osme
+```
+![World](/_extra/images/world.png?raw=true) 
+ 
 # API
 There is only 2 primary commands:
-  * .geoJSON(addr, [options], [callback]):Promise - to get geoJSON for a region
-  * .geocode(point, [options], [callback], [errorCallback]):Promise  - to find region by coordinates
+  * osme.geoJSON(addr, [options], [callback]):Promise - to get geoJSON for a region query
+  * osme.geocode(point, [options], [callback], [errorCallback]):Promise  - to find region by coordinates
 
 Plus we include build-in wrappers for Yandex Maps API, Google Maps API and Leaflet.
-  * .toGoogle(geoJson)
-  * .toYandex(geoJson)
-  * .toLeaflet(geoJson)
-  
+  * osme.toGoogle(geoJson)
+  * osme.toYandex(geoJson)
+  * osme.toLeaflet(geoJson)
+      
   All collections will have interface of .add .remove .setStyles .addEvent .removeEvent.
   
  
   Result it very simple - you can display any continent, country or state on a map.
-![US](http://kashey.ru/maps/osme/img/r2.png)
 
 # As Service
 
-The module consists in two parts - this client-side regions.js and server-side at [data.esosedi.org](http://data.esosedi.org). 
+The module consists in two parts, and this part is a client side. 
+It does not contain _any_ data, always striming it from the server side at [data.esosedi.org](http://data.esosedi.org). 
 Server-side also implements online `navigator` via database to help you find proper place.
 
-* base service runs as 'http' service. Not https!
+* base service runs as 'http' service. Not https!, to https is provided by cloudflare and geolocated.org.
 
 # What I can load?
- Data is generated in 5 steps. Each step generates some subset.
- 
- Each `addr`, you can use in .geoJSON is ID of some region - `parent`, plus it's all direct children.
- `is world->countries, country->states, state->county`
- 
- In case of country, all states will be included, even if they are not direct children.
- Sometimes something can exists between iso3166-2 states and iso3166-1 country. Macro or stat region, for example.
- 
+   
  So, you can load: 
  * `world` - all countries of the World.
  * geoScheme - 21 macro region of the World.
- Africa, Americas, Asia, Europe, Oceania, Eastern Africa, Middle Africa, Northern Africa, Southern Africa, Western Africa, Cariebbean, Central America, Northern America, South America, Central Asia, Eastern Asia, South-Eastern Asia, Southern Asia, Western Asia, Eastern Europe, Northern Europe, Southern Europe, Western Europe, Australia and New Zealand, Melanesia, Micronesia, Polynesia.
+ _Africa, Americas, Asia, Europe, Oceania, Eastern Africa, Middle Africa, Northern Africa, Southern Africa, Western Africa, Cariebbean, Central America, Northern America, South America, Central Asia, Eastern Asia, South-Eastern Asia, Southern Asia, Western Asia, Eastern Europe, Northern Europe, Southern Europe, Western Europe, Australia and New Zealand, Melanesia, Micronesia, Polynesia._
  * iso3166-1 code. Country code. US, AU, DE and so on
  * iso3166-2 code. Region. US-WA, AU-NSW, RU-MOW and so on
  * special exports. bigMoscow, Moscow, SaintPetersburg, bigPiter and so on. Open a Pull Request if you need a special one.
- * `number` - anything can be just accessed by relationId.
- Ie - you can get contour of USA using `US` or `148838`. Same meaning.
+ * `number` - as a OpenStreetMap RelationID. Ie - you can get contour of USA using `US` or `148838`, there is no difference.
 
 # Example
 * And check /examples folder!
 
-Supershort example
  ```javascript
- osmeRegions.geoJSON('FR').then( geojson => osmeRegions.toGoogle(geojson).add(map));
+ import osmeRegions from 'osme';
+ osme.geoJSON('FR').then( geojson => osme.toGoogle(geojson).add(map));
  ```
 
 A bit bigger one:
 ```
 // ask for some region
-osmeRegions.geoJSON('US'/*addr*/, {lang: 'de'}, function (data) {
+osme.geoJSON('US'/*addr*/, {lang: 'de'}, function (data) {
     // data is pure GEOJSON
     
     // you can create some helpers
-    var yandexGeoObjectColletionWrapper = osmeRegions.toYandex(data);
+    var yandexGeoObjectColletionWrapper = osme.toYandex(data);
     // or
-    var googleDataWrapper = osmeRegions.toGoogle(data);
+    var googleDataWrapper = osme.toGoogle(data);
     // or 
-    var leafletDataWrapper = osmeRegions.toLeaflet(data);
+    var leafletDataWrapper = osme.toLeaflet(data);
 
     // call .add to add data into the map
     yandexGeoObjectColletionWrapper.add(map);
@@ -101,30 +104,39 @@ osmeRegions.geoJSON('US'/*addr*/, {lang: 'de'}, function (data) {
 ```
 
 # .geoJSON
-* osmeRegions.geoJSON(addr, options, callback)
+* osme.geoJSON(addr, options, callback)
 Where:
  `addr` is OSM RelationId, [ISO3166-2](https://ru.wikipedia.org/wiki/ISO_3166-2) code(US/DE/GB or RU-MOS/US-TX etc, or [world's region name](https://en.wikipedia.org/wiki/Subregion)
  `options` is a object of { lang, quality, type, nocache, postFilter, recombine, scheme }. All are optional.
  
-        lang - prefered language (en,de,ru)
-        quality – set 0 to get geomentry for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
-        type - null to get `read` administrative borders of "coast", to cut off coast lines
-        nocache - turns of internal client-side cache
-        postFilter, recombine, scheme - to be used only by advanced users. 
+        - lang - prefered language (en,de,ru)
+        - quality – set 0 to get geomentry for fullHD resolution. -1,0,+1,+2 for /4, x1, x4, x16 quality.
+        - type - null|'coast'. 
+          - null to get `raw` `maritime` administrative borders, including terrotorial water.
+          - "coast", to cut off coast lines.
+        - nocache - turns of internal client-side cache
+        - postFilter, recombine, scheme - to be used only by advanced users. 
         
 
 If you dont know relationId(`addr`) for region you need, you can:
 1. Traverse map database at [http://data.esosedi.org](http://data.esosedi.org).
 2. Use reverse geocode, via this lib, or via REST call - http://data.esosedi.org/geocode/v1?[lng=(ru|en)]&point=x,y[&seq=?][&callback=?]
-3. Use [iso3166](https://github.com/esosedi/3166) library.
+3. Use [iso3166](https://github.com/esosedi/3166) library to get administrative divisions as a list.
 
+### type=coast
+Type coast will return information you want - pretty borders. Very hi-detailed borders.
+Here is comparison between borders for Greece with and without maritime.
+[Greece](/_extra/images/maritime.png?raw=true)
+Difference - 154kb versus 251.
+
+### PS:
 Information available for ~300k regions in 3 languages(en, de, ru) and some secret modes.
 
 This module uses CORS to transport JSON via different hosts.
 
 You can store geojson produced by this module, or cache packed json files from orinal data endpoint.
 
-Just change data-endpoint by executing `osmeRegions.setHost` command.
+Just change data-endpoint by executing `osme.setHost` command.
 
 * Remember: We have to provide copyright information, and you have to display it.
 
@@ -133,11 +145,14 @@ After all you will get standard geoJSON. You can use it by your own risk.
 
 More Examples:
 ```
-osmeRegions.geoJSON('RU-MOW', {lang: 'ru'}, function (data) {
-    var collection = osmeRegions.toYandex(data, ymaps);
+
+// request Moscow
+osme.geoJSON('RU-MOW', {lang: 'ru'}, function (data) {
+    var collection = osme.toYandex(data, ymaps);
     collection.add(geoMap);
 
     geoMap.setBounds(collection.collection.getBounds(), {duration: 300});
+    
     var strokeColors = [
         '#000',
         '#F0F',
@@ -146,6 +161,8 @@ osmeRegions.geoJSON('RU-MOW', {lang: 'ru'}, function (data) {
     ];
     var meta = data.metaData,
         maxLevel = meta.levels[1] + 1;
+        
+    // colorize the collection    
     collection.setStyles(function (object, yobject) {
         var level = object.properties.level;
         return ({
@@ -156,14 +173,8 @@ osmeRegions.geoJSON('RU-MOW', {lang: 'ru'}, function (data) {
             fillColor: '#FFE2',
         });
     });
-
-    collection.addEvent('dblclick', function (object, type, target) {
-        var osmId = object.properties.osmId;
-        event.preventDefault();
-    });
 ```
-
-![MOW](http://kashey.ru/maps/osme/img/r1.png)
+![Moscow](/_extra/images/moscow.png?raw=true)
 
 # setStyles
 
@@ -175,14 +186,14 @@ var countryColors={
     'CA': "F00",
     'IN': "0F0",
     'US': "00F",
-    'RU': "F0F
+    'RU': "F0F"
 };
 
 function setColors(collection, countryColors){
      // You know this function
      collection.setStyles(function (object) {
         // get ISO counry code and color it
-        var iso = object.properties.properties.iso3166.toUpperCase(),
+        var iso = (object.properties.properties.iso3166 ||'').toUpperCase(),
             color=countryColors[iso];
         return ({
             strokeWidth: 1,
@@ -194,12 +205,13 @@ function setColors(collection, countryColors){
 }
 
 //...
-osmeRegions.load('world',{}).then(data => {
-  const collection = osmeRegions.toGoogle(data);
+osme.geoJSON('world',{}).then(data => {
+  const collection = osme.toGoogle(data);
   setColors(collection, countryColors);
   collection.add(map);
 });
 ```
+![Colour](/_extra/images/colorworld.png?raw=true)
 
 # addEvents
 
@@ -260,8 +272,8 @@ the result of recombination is `borderless`. You will get not a pack of shapes, 
 Recombination can be used to join any set of regions in one. This is usefull in many cases.
 
 ```
- osmeRegions.geoJSON(addr, {lang: 'en'}, function (data, pureData) {
-    var coords=osmeRegions.recombine(pureData, { // yes, you can use pure data
+ osme.geoJSON('349035', {lang: 'en'}, function (data, pureData) {
+    var coords=osme.recombine(pureData, { // yes, you can use pure data
         filter: function (region) {
             // somethere in Province of Barcelona (349035) and Barcelona(2417889) or adjacent
             // remember - you have to discard #349035 or you got duplicate.
@@ -273,7 +285,7 @@ Recombination can be used to join any set of regions in one. This is usefull in 
             geometry: {
                 type: 'Polygon',
                 fillRule: 'nonZero',
-                coordinates: osmeRegions.flipCoordinate([coords.coordinates[j]])
+                coordinates: osme.flipCoordinate([coords.coordinates[j]])
             }
         }, {
             opacity: 0.8,
@@ -288,7 +300,7 @@ Recombination can be used to join any set of regions in one. This is usefull in 
 }
 ```
 And you got mini Barcelona
-![BARS](http://kashey.ru/maps/osme/img/r3.png)
+![Barcelona](/_extra/images/bars.png?raw=true)
 
 Where is also exists options.scheme - yet another recombination function. It also sometimes exists in source geoJSON file.
 The goal still simple - some regions lays on the top of other, and do not have adjacent borders - Kiev, for example, and Kiev province.

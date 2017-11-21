@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
-    <script type="text/javascript" src="../../bundle.js"></script>
+    <script type="text/javascript" src="../../umd/index.js"></script>
 </head>
 <body>
 <style>
@@ -20,7 +20,9 @@
     }
 </style>
 
-PS: You cannot display Russia with out .toLeaflet command. It will break apart due to bounded coordinates.
+Good example for Leaflet - Russia.
+It it so big, that goes beyond 180 degrees.
+As result you cannot display Russia without .toLeaflet (or .toUnboundedCoordinates) command.
 
 <div id="map1" class="map"></div>
 
@@ -34,11 +36,11 @@ PS: You cannot display Russia with out .toLeaflet command. It will break apart d
         zoom: 1
     });
 
-    osmeRegions.geoJSON('RU', {
+    osme.geoJSON('RU', {
         lang: 'en',
         type: 'coast'
     }).then(data => {
-        var collection = osmeRegions.toLeaflet(data);
+        var collection = osme.toLeaflet(data);
         collection.add(myMap);
     });
 </script>

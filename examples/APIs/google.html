@@ -5,7 +5,7 @@
     <title>Disputed borders</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
-    <script type="text/javascript" src="../../bundle.js"></script>
+    <script type="text/javascript" src="../../umd/index.js"></script>
 </head>
 <body>
 <style>
@@ -31,11 +31,11 @@
     };
     var myMap = new google.maps.Map(document.getElementById('map1'), mapOptions);
 
-    osmeRegions.geoJSON('US', {
+    osme.geoJSON('US', {
         lang: 'en',
         type: 'coast'
     }).then(data => {
-        var collection = osmeRegions.toGoogle(data);
+        var collection = osme.toGoogle(data);
         collection.add(myMap);
     });
 </script>

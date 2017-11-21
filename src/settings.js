@@ -1,7 +1,10 @@
 import load from './utils/load_native';
 
 const settings = {
-    HOST: 'http://data.esosedi.org/regions/v1/',
+    HOST: (window.location.protocol === 'https:'
+       ? 'https://osme.geolocated.org/regions/v1/'
+       : 'http://data.esosedi.org/regions/v1/'
+    ),
     GEOCODEHOST: 'http://data.esosedi.org/geocode/v1',
     DEBUG: false,
     cache: {},
