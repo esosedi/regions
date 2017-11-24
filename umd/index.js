@@ -434,14 +434,14 @@ var osmeRegions = /** @lends osmeRegions */{
             cb_reject = void 0;
         options = options || {};
 
-        if (typeof options == "function") {
+        if (typeof options === "function") {
             throw new Error('callback must be at third place');
         }
 
         var lang = options.lang || 'en',
-            addr = lang + '_' + region;
+            addr = typeof region === 'string' ? lang + '_' + region : null;
 
-        if (typeof Promise != 'undefined') {
+        if (typeof Promise !== 'undefined') {
             promise = new Promise(function (resolve, reject) {
                 cb_resolve = resolve;
                 cb_reject = reject;
@@ -450,7 +450,9 @@ var osmeRegions = /** @lends osmeRegions */{
             cb_resolve = cb_reject = function cb_reject() {};
         }
         var callback = function callback(geojson, data) {
-            _settings2.default.cache[addr] = data;
+            if (addr) {
+                _settings2.default.cache[addr] = data;
+            }
             cb_resolve(geojson, data);
             _callback && _callback(geojson, data);
         };
@@ -460,24 +462,29 @@ var osmeRegions = /** @lends osmeRegions */{
             _errorCallback && _errorCallback(geojson);
         };
 
-        if ((region + "").indexOf('http') === 0) {
-            addr = region;
-        } else {
-            addr = (options.host || _settings2.default.HOST) + '?lang=' + addr;
-            if (options.quality) {
-                addr += '&q=' + (options.quality + 1);
+        if (addr) {
+            if ((region + "").indexOf('http') === 0) {
+                addr = region;
+            } else {
+                addr = (options.host || _settings2.default.HOST) + '?lang=' + addr;
+                if (options.quality) {
+                    addr += '&q=' + (options.quality + 1);
+                }
+                if (options.type) {
+                    addr += '&type=' + options.type;
+                }
             }
-            if (options.type) {
-                addr += '&type=' + options.type;
+
+            if (!_settings2.default.cache[addr] || options.nocache) {
+                this.loadData(addr, function (data) {
+                    (0, _nextTick2.default)(callback, [assertData(errorCallback, _this.parseData(data, options)), data]);
+                }, errorCallback);
+            } else {
+                var data = _settings2.default.cache[addr];
+                (0, _nextTick2.default)(callback, [assertData(errorCallback, this.parseData(data, options)), data]);
             }
-        }
-        if (!_settings2.default.cache[addr] || options.nocache) {
-            this.loadData(addr, function (data) {
-                (0, _nextTick2.default)(callback, [assertData(errorCallback, _this.parseData(data, options)), data]);
-            }, errorCallback);
         } else {
-            var data = _settings2.default.cache[addr];
-            (0, _nextTick2.default)(callback, [assertData(errorCallback, this.parseData(data, options)), data]);
+            (0, _nextTick2.default)(callback, [assertData(errorCallback, this.parseData(region, options)), region]);
         }
 
         return promise;
@@ -542,12 +549,6 @@ var osmeRegions = /** @lends osmeRegions */{
      * @returns {osmeMapCollection}
      */
     toLeaflet: _leaflet2.default,
-
-    /**
-     * unbounds coordinates from -180:180.
-     * @see {osmeRegions.toLeaflet}
-     */
-    toUnbounededCoordinates: _leaflet2.default,
 
     /**
      * Reverse geocode

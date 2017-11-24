@@ -78,14 +78,14 @@ var osmeRegions = /** @lends osmeRegions */{
         let cb_resolve, cb_reject;
         options = options || {};
 
-        if( typeof options == "function") {
+        if( typeof options === "function") {
             throw new Error('callback must be at third place');
         }
 
         let lang = options.lang || 'en',
-            addr = lang + '_' + region;
+            addr = typeof region === 'string' ? lang + '_' + region : null;
 
-        if (typeof Promise != 'undefined') {
+        if (typeof Promise !== 'undefined') {
             promise = new Promise((resolve, reject) => {
                 cb_resolve = resolve;
                 cb_reject = reject;
@@ -95,7 +95,9 @@ var osmeRegions = /** @lends osmeRegions */{
             };
         }
         const callback = (geojson, data) => {
-            settings.cache[addr] = data;
+            if(addr){
+                settings.cache[addr] = data;
+            }
             cb_resolve(geojson, data);
             _callback && _callback(geojson, data);
         };
@@ -106,24 +108,29 @@ var osmeRegions = /** @lends osmeRegions */{
         };
 
 
-        if ((region + "").indexOf('http') === 0) {
-            addr = region;
-        } else {
-            addr = (options.host || settings.HOST) + '?lang=' + addr;
-            if (options.quality) {
-                addr += '&q=' + (options.quality + 1);
+        if(addr) {
+            if ((region + "").indexOf('http') === 0) {
+                addr = region;
+            } else {
+                addr = (options.host || settings.HOST) + '?lang=' + addr;
+                if (options.quality) {
+                    addr += '&q=' + (options.quality + 1);
+                }
+                if (options.type) {
+                    addr += '&type=' + options.type;
+                }
             }
-            if (options.type) {
-                addr += '&type=' + options.type;
-            }
-        }
-        if (!settings.cache[addr] || options.nocache) {
-            this.loadData(addr, (data) => {
+
+            if (!settings.cache[addr] || options.nocache) {
+                this.loadData(addr, (data) => {
+                    nextTick(callback, [assertData(errorCallback, this.parseData(data, options)), data]);
+                }, errorCallback)
+            } else {
+                const data = settings.cache[addr];
                 nextTick(callback, [assertData(errorCallback, this.parseData(data, options)), data]);
-            }, errorCallback)
+            }
         } else {
-            const data = settings.cache[addr];
-            nextTick(callback, [assertData(errorCallback, this.parseData(data, options)), data]);
+          nextTick(callback, [assertData(errorCallback, this.parseData(region, options)), region]);
         }
 
         return promise;

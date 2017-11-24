@@ -1,19 +1,13 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
 var _regions = require("./regions.js");
 
 var _regions2 = _interopRequireDefault(_regions);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-window.osmeRegions = _regions2.default;
-
-exports.default = _regions2.default;
+module.exports = _regions2.default;
 },{"./regions.js":6}],2:[function(require,module,exports){
 'use strict';
 
@@ -428,8 +422,8 @@ var osmeRegions = /** @lends osmeRegions */{
      * @param {Function} [options.postFilter] filtering function.
      * @param {String|Object} [options.recombine] recombination function.
      * @param {Object} [options.scheme] another recombination function.
-     * @param {Function) [callback]
-     * @param {Function) [errorCallback]
+     * @param {Function} [callback]
+     * @param {Function} [errorCallback]
      * @return {Promise}
      */
     geoJSON: function geoJSON(region, options, _callback, _errorCallback) {
@@ -440,14 +434,14 @@ var osmeRegions = /** @lends osmeRegions */{
             cb_reject = void 0;
         options = options || {};
 
-        if (typeof options == "function") {
+        if (typeof options === "function") {
             throw new Error('callback must be at third place');
         }
 
         var lang = options.lang || 'en',
-            addr = lang + '_' + region;
+            addr = typeof region === 'string' ? lang + '_' + region : null;
 
-        if (typeof Promise != 'undefined') {
+        if (typeof Promise !== 'undefined') {
             promise = new Promise(function (resolve, reject) {
                 cb_resolve = resolve;
                 cb_reject = reject;
@@ -456,7 +450,9 @@ var osmeRegions = /** @lends osmeRegions */{
             cb_resolve = cb_reject = function cb_reject() {};
         }
         var callback = function callback(geojson, data) {
-            _settings2.default.cache[addr] = data;
+            if (addr) {
+                _settings2.default.cache[addr] = data;
+            }
             cb_resolve(geojson, data);
             _callback && _callback(geojson, data);
         };
@@ -466,24 +462,29 @@ var osmeRegions = /** @lends osmeRegions */{
             _errorCallback && _errorCallback(geojson);
         };
 
-        if ((region + "").indexOf('http') === 0) {
-            addr = region;
-        } else {
-            addr = (options.host || _settings2.default.HOST) + '?lang=' + addr;
-            if (options.quality) {
-                addr += '&q=' + (options.quality + 1);
+        if (addr) {
+            if ((region + "").indexOf('http') === 0) {
+                addr = region;
+            } else {
+                addr = (options.host || _settings2.default.HOST) + '?lang=' + addr;
+                if (options.quality) {
+                    addr += '&q=' + (options.quality + 1);
+                }
+                if (options.type) {
+                    addr += '&type=' + options.type;
+                }
             }
-            if (options.type) {
-                addr += '&type=' + options.type;
+
+            if (!_settings2.default.cache[addr] || options.nocache) {
+                this.loadData(addr, function (data) {
+                    (0, _nextTick2.default)(callback, [assertData(errorCallback, _this.parseData(data, options)), data]);
+                }, errorCallback);
+            } else {
+                var data = _settings2.default.cache[addr];
+                (0, _nextTick2.default)(callback, [assertData(errorCallback, this.parseData(data, options)), data]);
             }
-        }
-        if (!_settings2.default.cache[addr] || options.nocache) {
-            this.loadData(addr, function (data) {
-                (0, _nextTick2.default)(callback, [assertData(errorCallback, _this.parseData(data, options)), data]);
-            }, errorCallback);
         } else {
-            var data = _settings2.default.cache[addr];
-            (0, _nextTick2.default)(callback, [assertData(errorCallback, this.parseData(data, options)), data]);
+            (0, _nextTick2.default)(callback, [assertData(errorCallback, this.parseData(region, options)), region]);
         }
 
         return promise;
@@ -551,7 +552,7 @@ var osmeRegions = /** @lends osmeRegions */{
 
     /**
      * Reverse geocode
-     * @param {Numbrer[]} point - Point.
+     * @param {Number[]} point - Point.
      * @param {Object} [options]
      * @param {Number} [options.seq] - Sequence number.
      * @param {String} [options.lang] - Language.
@@ -566,7 +567,7 @@ exports.default = osmeRegions;
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+   value: true
 });
 
 var _load_native = require('./utils/load_native');
@@ -576,14 +577,14 @@ var _load_native2 = _interopRequireDefault(_load_native);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var settings = {
-    HOST: 'http://data.esosedi.org/regions/v1/',
-    GEOCODEHOST: 'http://data.esosedi.org/geocode/v1',
-    DEBUG: false,
-    cache: {},
+   HOST: window.location.protocol === 'https:' ? 'https://osme.geolocated.org/regions/v1/' : 'http://data.esosedi.org/regions/v1/',
+   GEOCODEHOST: 'http://data.esosedi.org/geocode/v1',
+   DEBUG: false,
+   cache: {},
 
-    latLongOrder: 0,
+   latLongOrder: 0,
 
-    load: _load_native2.default
+   load: _load_native2.default
 };
 
 exports.default = settings;
@@ -1409,22 +1410,22 @@ function placeHoldersCount (b64) {
 
 function byteLength (b64) {
   // base64 is 4/3 + up to two characters of the original data
-  return b64.length * 3 / 4 - placeHoldersCount(b64)
+  return (b64.length * 3 / 4) - placeHoldersCount(b64)
 }
 
 function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
+  var i, l, tmp, placeHolders, arr
   var len = b64.length
   placeHolders = placeHoldersCount(b64)
 
-  arr = new Arr(len * 3 / 4 - placeHolders)
+  arr = new Arr((len * 3 / 4) - placeHolders)
 
   // if there are placeholders, only get up to the last complete 4 chars
   l = placeHolders > 0 ? len - 4 : len
 
   var L = 0
 
-  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+  for (i = 0; i < l; i += 4) {
     tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
     arr[L++] = (tmp >> 16) & 0xFF
     arr[L++] = (tmp >> 8) & 0xFF
@@ -1493,7 +1494,7 @@ function fromByteArray (uint8) {
 /*!
  * The buffer module from node.js, for the browser.
  *
- * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @author   Feross Aboukhadijeh <https://feross.org>
  * @license  MIT
  */
 /* eslint-disable no-proto */
@@ -1596,7 +1597,7 @@ function from (value, encodingOrOffset, length) {
     throw new TypeError('"value" argument must not be a number')
   }
 
-  if (value instanceof ArrayBuffer) {
+  if (isArrayBuffer(value)) {
     return fromArrayBuffer(value, encodingOrOffset, length)
   }
 
@@ -1856,7 +1857,7 @@ function byteLength (string, encoding) {
   if (Buffer.isBuffer(string)) {
     return string.length
   }
-  if (isArrayBufferView(string) || string instanceof ArrayBuffer) {
+  if (isArrayBufferView(string) || isArrayBuffer(string)) {
     return string.byteLength
   }
   if (typeof string !== 'string') {
@@ -3186,6 +3187,14 @@ function blitBuffer (src, dst, offset, length) {
     dst[i + offset] = src[i]
   }
   return i
+}
+
+// ArrayBuffers from another context (i.e. an iframe) do not pass the `instanceof` check
+// but they should be treated as valid. See: https://github.com/feross/buffer/issues/166
+function isArrayBuffer (obj) {
+  return obj instanceof ArrayBuffer ||
+    (obj != null && obj.constructor != null && obj.constructor.name === 'ArrayBuffer' &&
+      typeof obj.byteLength === 'number')
 }
 
 // Node 0.10 supports `ArrayBuffer` but lacks `ArrayBuffer.isView`
