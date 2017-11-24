@@ -1,6 +1,6 @@
 {
   "name": "osme",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Provides geometry for regions of the World",
   "main": "lib/index.js",
   "unpkg": "umd/index.js",
@@ -12,7 +12,6 @@
     "prepublish": "npm run build && npm run umd",
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
-
     "test": "npm run test:pick -- 'tests/*.spec.js'",
     "test:pick": "BABEL_ENV=test mocha --compilers js:babel-core/register"
   },
