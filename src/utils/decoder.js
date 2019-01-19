@@ -24,10 +24,12 @@ function clampy(y) {
 
 function fromBase64(input) {
     input = input.replace(/_/g, '/').replace(/-/g, '+');
-    if (typeof atob != "undefined") {
+    if (typeof atob !== "undefined") {
         return atob(input);
     } else {
-        return new Buffer(input, 'base64').toString('binary');
+        // hide from webpack
+        const B = eval('Buffer');
+        return new B(input, 'base64').toString('binary');
     }
 }
 

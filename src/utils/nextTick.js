@@ -1,13 +1,5 @@
 function nextTick(callback, args) {
-    if (typeof setImmediate != 'undefined') {
-        setImmediate(function () {
-            callback.apply(this, args);
-        });
-    } else {
-        setTimeout(function () {
-            callback.apply(this, args);
-        }, 0);
-    }
+  Promise.resolve().then(() => callback.apply(this, args))
 }
 
 export default nextTick;

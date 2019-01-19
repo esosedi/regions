@@ -9,7 +9,7 @@
     "build:npm": "babel src -d lib",
     "build:bundle": "browserify lib/browserBundle.js > bundle.js",
     "build:umd": "browserify lib/browserBundle.js --standalone osme -o umd/index.js",
-    "prepublish": "npm run build && npm run umd",
+    "prepublish": "npm run build",
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
     "test": "npm run test:pick -- 'tests/*.spec.js'",
@@ -39,9 +39,10 @@
     "babel-preset-latest": "^6.16.0",
     "babel-preset-stage-1": "^6.16.0",
     "browserify": "^14.3.0",
+    "chai": "^3.5.0",
     "eslint": "^3.19.0",
     "eslint-plugin-mocha": "^4.9.0",
-    "chai": "^3.5.0",
-    "mocha": "^3.3.0"
+    "mocha": "^3.3.0",
+    "size-limit": "^0.21.1"
   }
 }

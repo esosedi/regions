@@ -13,7 +13,7 @@ describe("geocode", () => {
             expect(data.names[data.target.l2].name).to.be.equal('Germany');
             expect(data.names[data.target.l2].lng).to.be.equal('en');
         })
-    );
+    ).timeout(5000);
 
     it('should find Moscow', () =>
         osme.geocode(MOSCOW).then(data => {
