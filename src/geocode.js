@@ -1,4 +1,4 @@
-import settings from './settings';
+import settings from "./settings";
 
 /**
  * Reverse geocode
@@ -15,7 +15,7 @@ function geocode(point, options, _callback, _errorCallback) {
   let cb_resolve, cb_reject;
 
   var addr = settings.GEOCODEHOST;
-  addr += "?point=" + (+point[0]) + ',' + (+point[1]);
+  addr += "?point=" + +point[0] + "," + +point[1];
 
   if (typeof options == "function") {
     _errorCallback = _callback;
@@ -24,39 +24,38 @@ function geocode(point, options, _callback, _errorCallback) {
   }
 
   options = {
-    lang: 'en',
+    lang: "en",
     seq: 0,
     ...(options || {})
   };
 
   if (options.seq) {
-    addr += '&seq=' + (+options.seq);
+    addr += "&seq=" + +options.seq;
   }
   if (options.lang) {
-    addr += '&lng=' + (options.lang);
+    addr += "&lng=" + options.lang;
   }
 
-  if (typeof Promise != 'undefined') {
+  if (typeof Promise != "undefined") {
     promise = new Promise((resolve, reject) => {
       cb_resolve = resolve;
       cb_reject = reject;
-    })
+    });
   } else {
-    cb_resolve = cb_reject = () => {
-    };
+    cb_resolve = cb_reject = () => {};
   }
 
-  const callback = (geojson) => {
+  const callback = geojson => {
     cb_resolve(geojson);
     _callback && _callback(geojson);
   };
 
-  const errorCallback = (geojson) => {
+  const errorCallback = geojson => {
     cb_reject(geojson);
     _errorCallback && _errorCallback(geojson);
   };
 
-  settings.load(addr, (json) => callback(json), (err) => errorCallback(err));
+  settings.load(addr, json => callback(json), err => errorCallback(err));
 
   return promise;
 }
