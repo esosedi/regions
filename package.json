@@ -1,6 +1,6 @@
 {
   "name": "osme",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Provides geometry for regions of the World",
   "main": "lib/index.js",
   "unpkg": "umd/index.js",
