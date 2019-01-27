@@ -24,7 +24,7 @@ function styleToLeaflet(style) {
 function toLeaflet(baseGeoJson, _L) {
   const Leaflet = _L || window.L;
 
-  // impliment unbounded coordinates
+  // implement unbounded coordinates
   const geoJson = {
     ...baseGeoJson,
     features: baseGeoJson.features.map(feature => ({
@@ -57,6 +57,7 @@ function toLeaflet(baseGeoJson, _L) {
         )
       );
     },
+    geoJSON: geoJson,
     /**
      * @param {String} eventName
      * @param {Function} callback

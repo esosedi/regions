@@ -19,6 +19,7 @@ import geocode from "./geocode";
 import toGoogleCollection from "./collections/google";
 import toYandexCollection from "./collections/yandex";
 import toLeafletCollection from "./collections/leaflet";
+import toUnboundedGeoJSON from './collections/unbounded';
 
 const assertData = (errorCallback, data) => {
   if (!data || data.error) {
@@ -204,6 +205,13 @@ var osmeRegions = /** @lends osmeRegions */ {
    * @returns {osmeMapCollection}
    */
   toLeaflet: toLeafletCollection,
+
+  /**
+   * converts GeoJSON to GeoJSON with "unbounded" coordinates
+   * @param geoJson
+   * @returns {geoJson}
+   */
+  toUnboundedGeoJSON: toUnboundedGeoJSON,
 
   /**
    * Reverse geocode
